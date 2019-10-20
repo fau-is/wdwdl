@@ -1,0 +1,9 @@
+pandas
+arrow
+nltk
+distance
+jellyfish
+numpy
+scikit-learn
+keras
+tensorflow
