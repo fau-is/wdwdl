@@ -883,35 +883,50 @@ class Preprocessor(object):
         return no_outliers
 
 
-    def add_workaround_injured_responsiblity(self, process_instance):
+    def add_workaround_injured_responsiblity(self, process_instance, context):
         # random number of adds
         # random position of adds
 
-
-        return process_instance
+        return process_instance, context
 
     def add_workarounds_to_event_log(self, outliers):
 
+        # get process instances
         eventlog_df = self.data_structure['encoding']['eventlog_df']
-
         self.get_sequences_from_raw_eventlog(eventlog_df)
+        process_instances = self.data_structure['data']['process_instances_raw']
+        process_instances_context = self.data_structure['data']['context_attributes_process_instances_raw']
 
+        # get process instance without noise
+        process_instances_ = []
+        process_instances_context_ = []
+        for index in range(0, len(process_instances)):
+            if index not in outliers:
+                process_instances_.append(process_instances[index])
+                process_instances_context_.append(process_instances_context[index])
 
-        process_instances = self.data_structure['data']['process_instances']
-        context_attributes_process_instances = self.data_structure['data']['context_attributes_process_instances']
-        number_context_attributes = self.data_structure['encoding']['num_values_context']
-        number_control_flow_attributes = self.data_structure['encoding']['num_values_control_flow'] - 2  # case + time
-        number_attributes = self.data_structure['encoding']['num_values_features'] - 2  # case + time
-        vector_length = self.data_structure['meta']['max_length_process_instance'] * number_attributes
-
-        # label
-        # no workaround
+        # add workaround
+        process_instances_wa = []
+        process_instances_context_wa = []
         label = [0] * len(process_instances)
+        probability = 0.3  # 30% of the process instances include workarounds
+        for index in range(0, len(process_instances_)):
+            if numpy.random.uniform(0, 1) <= probability:
 
+                process_instances_wa, process_instances_context_wa =\
+                    self.add_workaround_injured_responsiblity(
+                        process_instances_[index],
+                        process_instances_context_[index]
+                    )
+            else:
+                process_instances_wa.append(process_instances_[index])
+                process_instances_context_wa.append(process_instances_context_[index])
 
-        # process instances and context without outliers
+        # from instance to event
 
-        #
+        # encoding
+
+        # from event to instance
 
 
 
