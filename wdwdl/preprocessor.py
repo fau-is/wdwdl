@@ -82,9 +82,9 @@ class Preprocessor(object):
         eventlog_df = pandas.read_csv(self.data_structure['support']['data_dir'], sep=';')
         self.data_structure['encoding']['eventlog_df'] = eventlog_df
         eventlog_df = self.encode_eventlog(args, eventlog_df)
-        # + 2 -> case + time
-        self.data_structure['encoding']['num_values_control_flow'] = \
-            2 + self.data_structure['encoding']['event_ids']['length']
+
+        self.set_number_control_flow_attributes()
+
         self.get_sequences_from_encoded_eventlog(eventlog_df)
 
         self.data_structure['support']['elements_per_fold'] = \
@@ -97,14 +97,13 @@ class Preprocessor(object):
             end_marked_process_instances.append(process_instance)
 
         self.data_structure['data']['process_instances'] = end_marked_process_instances
-        self.data_structure['meta']['max_length_process_instance'] = max(
-            [len(x) for x in self.data_structure['data']['process_instances']])
+
+        self.set_max_length_process_instance()
 
         self.data_structure['support']['event_labels'] = list(
             self.data_structure['encoding']['event_ids']['mapping'].values())
 
         self.data_structure['support']['event_types'] = copy.copy(self.data_structure['support']['event_labels'])
-
         self.data_structure['support']['map_event_label_to_event_id'] = dict(
             (c, i) for i, c in enumerate(self.data_structure['support']['event_labels']))
         self.data_structure['support']['map_event_id_to_event_label'] = dict(
@@ -117,10 +116,20 @@ class Preprocessor(object):
         self.data_structure['meta']['num_event_ids'] = len(self.data_structure['support']['event_labels'])
         self.data_structure['meta']['num_features'] = self.data_structure['meta']['num_event_ids'] + \
                                                       self.data_structure['meta']['num_attributes_context']
+        self.set_number_values_features()
 
+    def set_number_values_features(self):
         self.data_structure['encoding']['num_values_features'] = self.data_structure['encoding'][
                                                                      'num_values_control_flow'] + \
                                                                  self.data_structure['encoding']['num_values_context']
+    def set_number_control_flow_attributes(self):
+        # + 2 -> case + time
+        self.data_structure['encoding']['num_values_control_flow'] = \
+            2 + self.data_structure['encoding']['event_ids']['length']
+
+    def set_max_length_process_instance(self):
+        self.data_structure['meta']['max_length_process_instance'] = max(
+            [len(x) for x in self.data_structure['data']['process_instances']])
 
     def split_event_log(self, args):
 
@@ -751,11 +760,6 @@ class Preprocessor(object):
 
         return label
 
-    def get_process_instances(self):
-        return 0
-
-    def get_2d_label_tensor(self):
-        return 0
 
     def get_2d_data_tensor(self):
 
@@ -1066,9 +1070,16 @@ class Preprocessor(object):
                                        index=[i for i in range(data_set.shape[0])],
                                        columns=['f' + str(i) for i in range(data_set.shape[1])])
 
-        # encoding
+        # encoding of columns
         data_set_df = self.encode_eventlog(args, eventlog_df)
 
-        print(0)
+        # reset data structure
 
-        return data, label
+
+        # from event-based pandas data frame to instance-based
+        self.get_sequences_from_encoded_eventlog(data_set_df)
+
+        return data_set, label
+
+    def reset_data_structure(self):
+        self.data_structure['']
