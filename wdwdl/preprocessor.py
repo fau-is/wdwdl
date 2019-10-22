@@ -883,36 +883,59 @@ class Preprocessor(object):
         return no_outliers
 
 
-    def workaround_injured_responsiblity(self, process_instance, context):
+    def workaround_injured_responsiblity(self, process_instance, context, max_injures=1):
+        """
+        Change the value of the resource attribute.
+        The resource attribute is the first context attribute.
+        """
         # random number of adds
         # random position of adds
 
         return process_instance, context
 
 
-    def workaround_manipulated_data(self, process_instance, context):
+    def workaround_manipulated_data(self, process_instance, context, max_events=1, max_attributes=1):
+        """
+        Change the value of data attributes.
+        Data attributes are all context attributes without the resource attribute.
+        """
 
         return process_instance, context
 
 
-    def workaround_repeated_activity(self, process_instance, context):
+    def workaround_repeated_activity(self, process_instance, context, max_repetitions=1, max_repetition_length=5):
+        """
+        Repeat an activity and its context attributes n times.
+        """
 
         return process_instance, context
 
 
-    def workaround_substitued_activity(self, process_instance, context):
+    def workaround_substitued_activity(self, process_instance, context, max_substitutions=1):
+        """
+        Substitute an activity by another activity and its context attributes.
+        """
+
 
         return process_instance, context
 
-    def interchanged_activity(self, process_instance, context):
+    def interchanged_activity(self, process_instance, context, max_interchanges=1):
+        """
+        Pairwise change of two activities and its context attributes.
+        """
+
 
         return process_instance, context
 
-    def bypassed_activity(self, process_instance, context):
+    def bypassed_activity(self, process_instance, context, max_sequence_size=1):
+        """
+        Skips an activity or an sequence of of activities and its context attributes.
+        """
+
 
         return process_instance, context
 
-    def added_activity(self, process_instance, context):
+    def added_activity(self, process_instance, context, max_adds=1):
 
         return process_instance, context
 
@@ -946,7 +969,8 @@ class Preprocessor(object):
                     process_instance_wa, process_instance_context_wa = \
                         self.workaround_injured_responsiblity(
                             process_instances_[index],
-                            process_instances_context_[index]
+                            process_instances_context_[index],
+                            max_injures=1,
                         )
                     process_instances_wa.append(process_instance_wa)
                     process_instances_context_wa.append(process_instance_context_wa)
@@ -956,7 +980,9 @@ class Preprocessor(object):
                     process_instance_wa, process_instance_context_wa = \
                         self.workaround_manipulated_data(
                             process_instances_[index],
-                            process_instances_context_[index]
+                            process_instances_context_[index],
+                            max_events=1,
+                            max_attributes=1
                         )
                     process_instances_wa.append(process_instance_wa)
                     process_instances_context_wa.append(process_instance_context_wa)
@@ -966,7 +992,9 @@ class Preprocessor(object):
                     process_instance_wa, process_instance_context_wa = \
                         self.workaround_repeated_activity(
                             process_instances_[index],
-                            process_instances_context_[index]
+                            process_instances_context_[index],
+                            max_repetitions=1,
+                            max_repetition_length=5
                         )
                     process_instances_wa.append(process_instance_wa)
                     process_instances_context_wa.append(process_instance_context_wa)
@@ -976,7 +1004,8 @@ class Preprocessor(object):
                     process_instance_wa, process_instance_context_wa = \
                         self.workaround_substitued_activity(
                             process_instances_[index],
-                            process_instances_context_[index]
+                            process_instances_context_[index],
+                            max_substitutions=1
                         )
                     process_instances_wa.append(process_instance_wa)
                     process_instances_context_wa.append(process_instance_context_wa)
@@ -986,7 +1015,8 @@ class Preprocessor(object):
                     process_instance_wa, process_instance_context_wa = \
                         self.workaround_interchanged_activity(
                             process_instances_[index],
-                            process_instances_context_[index]
+                            process_instances_context_[index],
+                            max_interchanges=1
                         )
                     process_instances_wa.append(process_instance_wa)
                     process_instances_context_wa.append(process_instance_context_wa)
@@ -996,7 +1026,8 @@ class Preprocessor(object):
                     process_instance_wa, process_instance_context_wa = \
                         self.workaround_bypassed_activity(
                             process_instances_[index],
-                            process_instances_context_[index]
+                            process_instances_context_[index],
+                            max_sequence_size=1
                         )
                     process_instances_wa.append(process_instance_wa)
                     process_instances_context_wa.append(process_instance_context_wa)
@@ -1006,7 +1037,8 @@ class Preprocessor(object):
                     process_instance_wa, process_instance_context_wa = \
                         self.workaround_added_activity(
                             process_instances_[index],
-                            process_instances_context_[index]
+                            process_instances_context_[index],
+                            max_adds=1
                         )
                     process_instances_wa.append(process_instance_wa)
                     process_instances_context_wa.append(process_instance_context_wa)
