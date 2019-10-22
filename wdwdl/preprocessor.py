@@ -918,7 +918,7 @@ class Preprocessor(object):
 
         return process_instance, context
 
-    def interchanged_activity(self, process_instance, context, max_interchanges=1):
+    def workaround_interchanged_activity(self, process_instance, context, max_interchanges=1):
         """
         Pairwise change of two activities and its context attributes.
         """
@@ -926,7 +926,7 @@ class Preprocessor(object):
 
         return process_instance, context
 
-    def bypassed_activity(self, process_instance, context, max_sequence_size=1):
+    def workaround_bypassed_activity(self, process_instance, context, max_sequence_size=1):
         """
         Skips an activity or an sequence of of activities and its context attributes.
         """
@@ -934,12 +934,12 @@ class Preprocessor(object):
 
         return process_instance, context
 
-    def added_activity(self, process_instance, context, max_adds=1):
+    def workaround_added_activity(self, process_instance, context, max_adds=1):
 
         return process_instance, context
 
 
-    def add_workarounds_to_event_log(self, outliers):
+    def add_workarounds_to_event_log(self, no_outliers):
 
         # get process instances
         eventlog_df = self.data_structure['encoding']['eventlog_df']
@@ -951,7 +951,7 @@ class Preprocessor(object):
         process_instances_ = []
         process_instances_context_ = []
         for index in range(0, len(process_instances)):
-            if index not in outliers:
+            if index in no_outliers:
                 process_instances_.append(process_instances[index])
                 process_instances_context_.append(process_instances_context[index])
 
@@ -962,7 +962,7 @@ class Preprocessor(object):
         probability = 0.3  # 30% of the process instances include workarounds
         for index in range(0, len(process_instances_)):
             if numpy.random.uniform(0, 1) <= probability:
-                workaround_form = numpy.random.uniform(1, 7)
+                workaround_form = int(numpy.random.uniform(1, 7))
 
                 if workaround_form == 1:  # "injured_responsibility"
                     process_instance_wa, process_instance_context_wa = \
