@@ -883,11 +883,39 @@ class Preprocessor(object):
         return no_outliers
 
 
-    def add_workaround_injured_responsiblity(self, process_instance, context):
+    def workaround_injured_responsiblity(self, process_instance, context):
         # random number of adds
         # random position of adds
 
         return process_instance, context
+
+
+    def workaround_manipulated_data(self, process_instance, context):
+
+        return process_instance, context
+
+
+    def workaround_repeated_activity(self, process_instance, context):
+
+        return process_instance, context
+
+
+    def workaround_substitued_activity(self, process_instance, context):
+
+        return process_instance, context
+
+    def interchanged_activity(self, process_instance, context):
+
+        return process_instance, context
+
+    def bypassed_activity(self, process_instance, context):
+
+        return process_instance, context
+
+    def added_activity(self, process_instance, context):
+
+        return process_instance, context
+
 
     def add_workarounds_to_event_log(self, outliers):
 
@@ -908,26 +936,93 @@ class Preprocessor(object):
         # add workaround
         process_instances_wa = []
         process_instances_context_wa = []
-        label = [0] * len(process_instances)
+        label = [0] * len(process_instances_)  # 0 means that a process instance does not include a workaround
         probability = 0.3  # 30% of the process instances include workarounds
         for index in range(0, len(process_instances_)):
             if numpy.random.uniform(0, 1) <= probability:
+                workaround_form = numpy.random.uniform(1, 7)
 
-                process_instances_wa, process_instances_context_wa =\
-                    self.add_workaround_injured_responsiblity(
-                        process_instances_[index],
-                        process_instances_context_[index]
-                    )
+                if workaround_form == 1:  # "injured_responsibility"
+                    process_instance_wa, process_instance_context_wa = \
+                        self.workaround_injured_responsiblity(
+                            process_instances_[index],
+                            process_instances_context_[index]
+                        )
+                    process_instances_wa.append(process_instance_wa)
+                    process_instances_context_wa.append(process_instance_context_wa)
+                    label[index] = workaround_form
+
+                elif workaround_form == 2:  # "manipulated_data"
+                    process_instance_wa, process_instance_context_wa = \
+                        self.workaround_manipulated_data(
+                            process_instances_[index],
+                            process_instances_context_[index]
+                        )
+                    process_instances_wa.append(process_instance_wa)
+                    process_instances_context_wa.append(process_instance_context_wa)
+                    label[index] = workaround_form
+
+                elif workaround_form == 3:  # "repeated_activity"
+                    process_instance_wa, process_instance_context_wa = \
+                        self.workaround_repeated_activity(
+                            process_instances_[index],
+                            process_instances_context_[index]
+                        )
+                    process_instances_wa.append(process_instance_wa)
+                    process_instances_context_wa.append(process_instance_context_wa)
+                    label[index] = workaround_form
+
+                elif workaround_form == 4:  # "substituted_activity"
+                    process_instance_wa, process_instance_context_wa = \
+                        self.workaround_substitued_activity(
+                            process_instances_[index],
+                            process_instances_context_[index]
+                        )
+                    process_instances_wa.append(process_instance_wa)
+                    process_instances_context_wa.append(process_instance_context_wa)
+                    label[index] = workaround_form
+
+                elif workaround_form == 5:  # "interchanged_activity"
+                    process_instance_wa, process_instance_context_wa = \
+                        self.workaround_interchanged_activity(
+                            process_instances_[index],
+                            process_instances_context_[index]
+                        )
+                    process_instances_wa.append(process_instance_wa)
+                    process_instances_context_wa.append(process_instance_context_wa)
+                    label[index] = workaround_form
+
+                elif workaround_form == 6:  # "bypassed_activity"
+                    process_instance_wa, process_instance_context_wa = \
+                        self.workaround_bypassed_activity(
+                            process_instances_[index],
+                            process_instances_context_[index]
+                        )
+                    process_instances_wa.append(process_instance_wa)
+                    process_instances_context_wa.append(process_instance_context_wa)
+                    label[index] = workaround_form
+
+                elif workaround_form == 7:  # "added_activity"
+                    process_instance_wa, process_instance_context_wa = \
+                        self.workaround_added_activity(
+                            process_instances_[index],
+                            process_instances_context_[index]
+                        )
+                    process_instances_wa.append(process_instance_wa)
+                    process_instances_context_wa.append(process_instance_context_wa)
+                    label[index] = workaround_form
+
             else:
                 process_instances_wa.append(process_instances_[index])
                 process_instances_context_wa.append(process_instances_context_[index])
+
 
         # from instance to event
 
         # encoding
 
         # from event to instance
-
+        print(0)
 
 
 

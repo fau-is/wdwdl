@@ -67,6 +67,7 @@ def clear_measurement_file(args):
     open('./results/output_%s.csv' % (args.data_set[:-4]), "w").close()
 
 
+
 def get_output(args, preprocessor, _output):
     prefix = 0
     prefix_all_enabled = 1
@@ -114,12 +115,10 @@ def get_output(args, preprocessor, _output):
 
 
 def print_output_confusion_matrix(ground_truth_label, predicted_label):
-
     llprint(sklearn.metrics.confusion_matrix(ground_truth_label, predicted_label))
 
 
 def multi_class_prc_auc_score(ground_truth_label, predicted_label, average='weighted'):
-
     label_binarizer = sklearn.preprocessing.LabelBinarizer()
     label_binarizer.fit(ground_truth_label)
 
@@ -130,7 +129,6 @@ def multi_class_prc_auc_score(ground_truth_label, predicted_label, average='weig
 
 
 def multi_class_roc_auc_score(ground_truth_label, predicted_label, average='weighted'):
-
     label_binarizer = sklearn.preprocessing.LabelBinarizer()
     label_binarizer.fit(ground_truth_label)
 
@@ -141,7 +139,6 @@ def multi_class_roc_auc_score(ground_truth_label, predicted_label, average='weig
 
 
 def print_output(args, _output, index_fold):
-
     if args.cross_validation and index_fold < args.num_folds:
         llprint("\nAccuracy of fold %i: %f\n" % (index_fold, _output["accuracy_values"][index_fold]))
         llprint("Precision of fold %i: %f\n" % (index_fold, _output["precision_values"][index_fold]))
