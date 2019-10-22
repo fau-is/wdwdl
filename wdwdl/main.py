@@ -12,7 +12,7 @@ if __name__ == '__main__':
     # filter out noise and get no outliers
     no_outliers = preprocessor.clean_event_log(args)
     # integrate workaround forms
-    data, label = preprocessor.add_workarounds_to_event_log(no_outliers)
+    data, label = preprocessor.add_workarounds_to_event_log(args, no_outliers)
 
 
     # preprocessor.split_event_log(args)

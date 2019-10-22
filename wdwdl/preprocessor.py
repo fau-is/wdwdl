@@ -11,6 +11,7 @@ import keras
 import plotly
 from matplotlib import pyplot as plt
 
+
 class Preprocessor(object):
     data_structure = {
         'support': {
@@ -78,7 +79,9 @@ class Preprocessor(object):
         self.data_structure['support']['data_dir'] = args.data_dir + args.data_set
         self.data_structure['support']['encoded_data_dir'] = r'%s' % args.data_dir + r'encoded_%s' % args.data_set
 
-        eventlog_df = self.encode_eventlog(args)
+        eventlog_df = pandas.read_csv(self.data_structure['support']['data_dir'], sep=';')
+        self.data_structure['encoding']['eventlog_df'] = eventlog_df
+        eventlog_df = self.encode_eventlog(args, eventlog_df)
         # + 2 -> case + time
         self.data_structure['encoding']['num_values_control_flow'] = \
             2 + self.data_structure['encoding']['event_ids']['length']
@@ -126,10 +129,8 @@ class Preprocessor(object):
         else:
             self.set_indices_split_validation(args)
 
-    def encode_eventlog(self, args):
+    def encode_eventlog(self, args, eventlog_df):
 
-        eventlog_df = pandas.read_csv(self.data_structure['support']['data_dir'], sep=';')
-        self.data_structure['encoding']['eventlog_df'] = eventlog_df
         # case
         encoded_eventlog_df = pandas.DataFrame(eventlog_df.iloc[:, 0])
 
@@ -445,8 +446,8 @@ class Preprocessor(object):
         self.add_data_to_data_structure(process_instance_raw, 'process_instances_raw')
 
         if self.data_structure['meta']['num_attributes_context'] > 0:
-            self.add_data_to_data_structure(context_attributes_process_instance_raw, 'context_attributes_process_instances_raw')
-
+            self.add_data_to_data_structure(context_attributes_process_instance_raw,
+                                            'context_attributes_process_instances_raw')
 
     def get_sequences_from_encoded_eventlog(self, eventlog_df):
 
@@ -494,7 +495,6 @@ class Preprocessor(object):
             self.add_data_to_data_structure(context_attributes_process_instance, 'context_attributes_process_instances')
         self.data_structure['meta']['num_process_instances'] += 1
 
-
     def check_for_context_attributes_df(self, event):
 
         if len(event) == self.data_structure['encoding']['num_values_control_flow']:
@@ -505,7 +505,6 @@ class Preprocessor(object):
             self.data_structure['encoding']['num_values_context'] = sum(
                 self.data_structure['encoding']['context_attributes'])
             utils.llprint("%d context attributes found ...\n" % self.data_structure['meta']['num_attributes_context'])
-
 
     def add_encoded_event_to_process_instance(self, event, process_instance):
 
@@ -519,7 +518,6 @@ class Preprocessor(object):
         process_instance.append(tuple(encoded_event_id))
 
         return process_instance
-
 
     def get_context_attributes_of_event(self, event):
         """ First context attribute is at the 4th position. """
@@ -683,12 +681,14 @@ class Preprocessor(object):
             data_set = numpy.zeros((
                 len(cropped_process_instances),
                 self.data_structure['meta']['max_length_process_instance'],
-                self.data_structure['encoding']['event_ids']['length'] + self.data_structure['encoding']['num_values_context']), dtype=numpy.float64)
+                self.data_structure['encoding']['event_ids']['length'] + self.data_structure['encoding'][
+                    'num_values_context']), dtype=numpy.float64)
         else:
             data_set = numpy.zeros((
                 1,
                 self.data_structure['meta']['max_length_process_instance'],
-                self.data_structure['encoding']['event_ids']['length'] + self.data_structure['encoding']['num_values_context']), dtype=numpy.float32)
+                self.data_structure['encoding']['event_ids']['length'] + self.data_structure['encoding'][
+                    'num_values_context']), dtype=numpy.float32)
 
         # ToDo: do not create a single numpy array for all rows of data,
         #  maybe we can find a workaround for this
@@ -772,7 +772,6 @@ class Preprocessor(object):
             vector_length
         ))
 
-
         # fill data
         for index_instance in range(0, len(process_instances)):
             for time_step in range(0, len(process_instances[index_instance]) - 1):  # -1 end marking
@@ -782,7 +781,8 @@ class Preprocessor(object):
                 number_event_attributes = len(event_attributes)
 
                 for index_attribute in range(0, number_event_attributes):
-                    data_set[index_instance, time_step * (number_context_attributes + number_event_attributes) + index_attribute] = \
+                    data_set[index_instance, time_step * (
+                                number_context_attributes + number_event_attributes) + index_attribute] = \
                         event_attributes[index_attribute]
 
                 # context
@@ -791,11 +791,11 @@ class Preprocessor(object):
                 number_context_attributes = len(context_attributes)
 
                 for index_attribute in range(0, number_context_attributes):
-                    data_set[index_instance, time_step * (number_context_attributes + 1) + number_control_flow_attributes + index_attribute] = \
+                    data_set[index_instance, time_step * (
+                                number_context_attributes + 1) + number_control_flow_attributes + index_attribute] = \
                         context_attributes[index_attribute]
 
         return data_set
-
 
     def plot_learning_curve(self, history, learning_epochs):
         loss = history.history['loss']
@@ -806,7 +806,6 @@ class Preprocessor(object):
         plt.title('Training and validation loss')
         plt.legend()
         plt.show()
-
 
     def plot_reconstruction_error(self, df, col):
 
@@ -835,9 +834,8 @@ class Preprocessor(object):
         utils.llprint("Create data set as tensor ... \n")
         features_data = self.get_2d_data_tensor()
         features_data_df = pandas.DataFrame(data=features_data[0:, 0:],
-                                index=[i for i in range(features_data.shape[0])],
-                                columns=['f' + str(i) for i in range(features_data.shape[1])])
-
+                                            index=[i for i in range(features_data.shape[0])],
+                                            columns=['f' + str(i) for i in range(features_data.shape[1])])
 
         # autoencoder
         input_dimension = features_data.shape[1]
@@ -881,7 +879,6 @@ class Preprocessor(object):
 
         return no_outliers
 
-
     def workaround_injured_responsiblity(self, process_instance, context, max_injures=1):
         """
         Change the value of the resource attribute.
@@ -892,7 +889,6 @@ class Preprocessor(object):
 
         return process_instance, context
 
-
     def workaround_manipulated_data(self, process_instance, context, max_events=1, max_attributes=1):
         """
         Change the value of data attributes.
@@ -901,7 +897,6 @@ class Preprocessor(object):
 
         return process_instance, context
 
-
     def workaround_repeated_activity(self, process_instance, context, max_repetitions=1, max_repetition_length=5):
         """
         Repeat an activity and its context attributes n times.
@@ -909,12 +904,10 @@ class Preprocessor(object):
 
         return process_instance, context
 
-
     def workaround_substitued_activity(self, process_instance, context, max_substitutions=1):
         """
         Substitute an activity by another activity and its context attributes.
         """
-
 
         return process_instance, context
 
@@ -923,7 +916,6 @@ class Preprocessor(object):
         Pairwise change of two activities and its context attributes.
         """
 
-
         return process_instance, context
 
     def workaround_bypassed_activity(self, process_instance, context, max_sequence_size=1):
@@ -931,15 +923,13 @@ class Preprocessor(object):
         Skips an activity or an sequence of of activities and its context attributes.
         """
 
-
         return process_instance, context
 
     def workaround_added_activity(self, process_instance, context, max_adds=1):
 
         return process_instance, context
 
-
-    def add_workarounds_to_event_log(self, no_outliers):
+    def add_workarounds_to_event_log(self, args, no_outliers):
 
         # get process instances
         eventlog_df = self.data_structure['encoding']['eventlog_df']
@@ -1047,8 +1037,7 @@ class Preprocessor(object):
                 process_instances_wa.append(process_instances_[index])
                 process_instances_context_wa.append(process_instances_context_[index])
 
-
-        # from instance-based list to event-based data frame
+        # from instance-based list to event-based numpy array
         number_of_events = sum(list([len(element) for element in process_instances_wa]))
         data_set = numpy.zeros((number_of_events, 3 + len(process_instances_context_wa[0][0])))  # case, event and time
 
@@ -1067,20 +1056,19 @@ class Preprocessor(object):
 
                 # context attributes
                 for index_context in range(0, len(process_instances_context_wa[index][index_event])):
-                    data_set[index_, index_context + 3] = process_instances_context_wa[index][index_event][index_context]
+                    data_set[index_, index_context + 3] = process_instances_context_wa[index][index_event][
+                        index_context]
 
                 index_ += 1
 
+        # from event-based numpy array to event-based pandas data frame
+        data_set_df = pandas.DataFrame(data=data_set[0:, 0:],
+                                       index=[i for i in range(data_set.shape[0])],
+                                       columns=['f' + str(i) for i in range(data_set.shape[1])])
+
         # encoding
-
-
+        data_set_df = self.encode_eventlog(args, eventlog_df)
 
         print(0)
 
-
-
-
-
         return data, label
-
-
