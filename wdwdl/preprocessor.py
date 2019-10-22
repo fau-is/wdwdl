@@ -54,7 +54,8 @@ class Preprocessor(object):
             'process_instances': [],
             'ids_process_instances': [],
             'context_attributes_process_instances': [],
-
+            'process_instances_raw': [],
+            'context_attributes_process_instances_raw': [],
             'train': {
                 'process_instances': [],
                 'context_attributes': [],
@@ -409,6 +410,44 @@ class Preprocessor(object):
     def set_length_of_context_encoding(self, num_columns):
         self.data_structure['encoding']['context_attributes'].append(num_columns)
 
+    def get_sequences_from_raw_eventlog(self, eventlog_df):
+        id_latest_process_instance_raw = ''
+        process_instance_raw = ''
+        first_event_of_process_instance_raw = True
+        context_attributes_process_instance_raw = []
+
+        for index, event in eventlog_df.iterrows():
+
+            id_current_process_instance = event[0]
+
+            if id_current_process_instance != id_latest_process_instance_raw:
+                id_latest_process_instance_raw = id_current_process_instance
+
+                if not first_event_of_process_instance_raw:
+                    self.add_data_to_data_structure(process_instance_raw, 'process_instances_raw')
+
+                    if self.data_structure['meta']['num_attributes_context'] > 0:
+                        self.add_data_to_data_structure(context_attributes_process_instance_raw,
+                                                        'context_attributes_process_instances_raw')
+
+                process_instance_raw = []
+
+                if self.data_structure['meta']['num_attributes_context'] > 0:
+                    context_attributes_process_instance_raw = []
+
+            if self.data_structure['meta']['num_attributes_context'] > 0:
+                context_attributes_event = self.get_context_attributes_of_event(event)
+                context_attributes_process_instance_raw.append(context_attributes_event)
+
+            process_instance_raw.append(event[1])
+            first_event_of_process_instance_raw = False
+
+        self.add_data_to_data_structure(process_instance_raw, 'process_instances_raw')
+
+        if self.data_structure['meta']['num_attributes_context'] > 0:
+            self.add_data_to_data_structure(context_attributes_process_instance_raw, 'context_attributes_process_instances_raw')
+
+
     def get_sequences_from_encoded_eventlog(self, eventlog_df):
 
         id_latest_process_instance = ''
@@ -443,7 +482,7 @@ class Preprocessor(object):
                 self.data_structure['meta']['num_process_instances'] += 1
 
             if self.data_structure['meta']['num_attributes_context'] > 0:
-                context_attributes_event = self.get_context_attributes_of_event(event)
+                context_attributes_event = self.get_encoded_context_attributes_of_event(event)
                 context_attributes_process_instance.append(context_attributes_event)
 
             process_instance = self.add_encoded_event_to_process_instance(event, process_instance)
@@ -454,6 +493,7 @@ class Preprocessor(object):
         if self.data_structure['meta']['num_attributes_context'] > 0:
             self.add_data_to_data_structure(context_attributes_process_instance, 'context_attributes_process_instances')
         self.data_structure['meta']['num_process_instances'] += 1
+
 
     def check_for_context_attributes_df(self, event):
 
@@ -480,7 +520,15 @@ class Preprocessor(object):
 
         return process_instance
 
+
     def get_context_attributes_of_event(self, event):
+        """ First context attribute is at the 4th position. """
+
+        event = event.tolist()
+
+        return event[3:]
+
+    def get_encoded_context_attributes_of_event(self, event):
 
         event = event.tolist()
         context_attributes_event = []
@@ -819,7 +867,7 @@ class Preprocessor(object):
 
         # df_history = pandas.DataFrame(history.history)
 
-        self.plot_learning_curve(history, learning_epochs)
+        # self.plot_learning_curve(history, learning_epochs)
 
         # remove noise of event log data
         predictions = autoencoder.predict(features_data)
@@ -827,13 +875,49 @@ class Preprocessor(object):
         df_error = pandas.DataFrame({'reconstruction_error': mse}, index=[i for i in range(features_data.shape[0])])
 
         plot_error = self.plot_reconstruction_error(df_error, 'reconstruction_error')
-        print(plotly.offline.plot(plot_error))
-        outliers = df_error.index[df_error.reconstruction_error > 0.001].tolist()
+        # print(plotly.offline.plot(plot_error))
+        no_outliers = df_error.index[df_error.reconstruction_error <= 0.001].tolist()
 
         # features_data = features_data_df.drop(features_data_df.index[outliers])
 
-        return outliers
+        return no_outliers
 
 
+    def add_workaround_injured_responsiblity(self, process_instance):
+        # random number of adds
+        # random position of adds
+
+
+        return process_instance
+
+    def add_workarounds_to_event_log(self, outliers):
+
+        eventlog_df = self.data_structure['encoding']['eventlog_df']
+
+        self.get_sequences_from_raw_eventlog(eventlog_df)
+
+
+        process_instances = self.data_structure['data']['process_instances']
+        context_attributes_process_instances = self.data_structure['data']['context_attributes_process_instances']
+        number_context_attributes = self.data_structure['encoding']['num_values_context']
+        number_control_flow_attributes = self.data_structure['encoding']['num_values_control_flow'] - 2  # case + time
+        number_attributes = self.data_structure['encoding']['num_values_features'] - 2  # case + time
+        vector_length = self.data_structure['meta']['max_length_process_instance'] * number_attributes
+
+        # label
+        # no workaround
+        label = [0] * len(process_instances)
+
+
+        # process instances and context without outliers
+
+        #
+
+
+
+
+
+
+        return data, label
 
 

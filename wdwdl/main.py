@@ -7,8 +7,14 @@ import wdwdl.utils as utils
 if __name__ == '__main__':
 
     args = config.load()
+    # init preprocessor
     preprocessor = Preprocessor(args)
-    preprocessor.clean_event_log(args)
+    # filter out noise and get no outliers
+    no_outliers = preprocessor.clean_event_log(args)
+    # integrate workaround forms
+    data, label = preprocessor.add_workarounds_to_event_log(no_outliers)
+
+
     # preprocessor.split_event_log(args)
 
     # output = utils.load_output()
