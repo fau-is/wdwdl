@@ -1070,16 +1070,30 @@ class Preprocessor(object):
                                        index=[i for i in range(data_set.shape[0])],
                                        columns=['f' + str(i) for i in range(data_set.shape[1])])
 
+        # reset data structure for encoding
+        self.data_structure['encoding']['event_ids'] = {}
+        self.data_structure['encoding']['context_attributes'] = []
+
         # encoding of columns
         data_set_df = self.encode_eventlog(args, eventlog_df)
 
-        # reset data structure
+        # update of data structure
+        # num_values_context will be automatically set based on encode_eventlog
+        self.set_number_control_flow_attributes()
+        self.set_number_values_features()
 
+        # reset of data structure for get_sequence_from_encoded_eventlog
+        self.data_structure['data']['ids_process_instances'] = []
+        self.data_structure['data']['process_instances'] = []
+        self.data_structure['data']['context_attributes_process_instances'] = []
 
         # from event-based pandas data frame to instance-based
         self.get_sequences_from_encoded_eventlog(data_set_df)
 
-        return data_set, label
+        # update of data structure for get_2d_data_tensor
+        self.set_max_length_process_instance()
 
-    def reset_data_structure(self):
-        self.data_structure['']
+        # from sequence to tensor
+        data_set = self.get_2d_data_tensor()
+
+        return data_set, label
