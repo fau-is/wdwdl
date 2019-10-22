@@ -876,8 +876,7 @@ class Preprocessor(object):
 
         plot_error = self.plot_reconstruction_error(df_error, 'reconstruction_error')
         # print(plotly.offline.plot(plot_error))
-        no_outliers = df_error.index[df_error.reconstruction_error <= 0.001].tolist()
-
+        no_outliers = df_error.index[df_error['reconstruction_error'] <= 0.2].tolist()
         # features_data = features_data_df.drop(features_data_df.index[outliers])
 
         return no_outliers
@@ -1049,11 +1048,30 @@ class Preprocessor(object):
                 process_instances_context_wa.append(process_instances_context_[index])
 
 
-        # from instance to event
+        # from instance-based list to event-based data frame
+        number_of_events = sum(list([len(element) for element in process_instances_wa]))
+        data_set = numpy.zeros((len(process_instances_wa), 3 + len(process_instances_context_wa[0][0])))  # case, event and time
+
+        for index in range(0, len(process_instances_wa)):
+
+            for index_event in range(0, len(process_instances_wa[index])):
+                # case
+                data_set[index_event, 0] = index
+
+                # event
+                data_set[index_event, 1] = process_instances_wa[index][index_event]
+
+                # time
+                data_set[index_event, 2] = 0  # only for filling the gap
+
+                # context attributes
+                for index_context in range(0, len(process_instances_context_wa[index][index_event])):
+                    data_set[index_event, index_context] = process_instances_context_wa[index][index_event][index_context]
 
         # encoding
 
-        # from event to instance
+
+
         print(0)
 
 
