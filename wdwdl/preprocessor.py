@@ -1050,23 +1050,26 @@ class Preprocessor(object):
 
         # from instance-based list to event-based data frame
         number_of_events = sum(list([len(element) for element in process_instances_wa]))
-        data_set = numpy.zeros((len(process_instances_wa), 3 + len(process_instances_context_wa[0][0])))  # case, event and time
+        data_set = numpy.zeros((number_of_events, 3 + len(process_instances_context_wa[0][0])))  # case, event and time
 
+        index_ = 0
         for index in range(0, len(process_instances_wa)):
 
             for index_event in range(0, len(process_instances_wa[index])):
                 # case
-                data_set[index_event, 0] = index
+                data_set[index_, 0] = index
 
                 # event
-                data_set[index_event, 1] = process_instances_wa[index][index_event]
+                data_set[index_, 1] = process_instances_wa[index][index_event]
 
                 # time
-                data_set[index_event, 2] = 0  # only for filling the gap
+                data_set[index_, 2] = 0  # only for filling the gap
 
                 # context attributes
                 for index_context in range(0, len(process_instances_context_wa[index][index_event])):
-                    data_set[index_event, index_context] = process_instances_context_wa[index][index_event][index_context]
+                    data_set[index_, index_context + 3] = process_instances_context_wa[index][index_event][index_context]
+
+                index_ += 1
 
         # encoding
 
