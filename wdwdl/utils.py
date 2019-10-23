@@ -6,6 +6,7 @@ import csv
 import sklearn
 import arrow
 import os
+import keras
 
 output = {
     "accuracy_values": [],
@@ -22,6 +23,10 @@ output = {
     "auc_prc_value": 0.0,
     "training_time_seconds": []
 }
+
+
+def convert_label_to_categorical(label):
+    return keras.utils.np_utils.to_categorical(label)
 
 
 def load(path):
