@@ -589,8 +589,10 @@ class Preprocessor(object):
 
         return event_type
 
+
     def split_validation(self, data_set, label):
         return sklearn.model_selection.train_test_split(data_set, label, test_size=0.3, random_state=0)
+
 
     def set_indices_k_fold_validation(self):
         """ Produces indices for each fold of a k-fold cross-validation. """

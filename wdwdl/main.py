@@ -21,7 +21,7 @@ if __name__ == '__main__':
     # predict
     predictions = predictor.apply_wa_classification(args, data_set_test)
     # evaluate
-    
+    utils.plot_confusion_matrix(utils.arg_max(label_test).tolist(), predictions.tolist())
 
     print(0)
     # preprocessor.split_event_log(args)

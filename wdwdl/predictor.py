@@ -9,13 +9,12 @@ except ImportError:
     pass
 from jellyfish._jellyfish import damerau_levenshtein_distance
 import wdwdl.utils as utils
-import numpy
 
 
 def apply_wa_classification(args, data_set):
     model = load_model('%sclf_wa_mapping.h5' % args.checkpoint_dir)
     predictions = model.predict(data_set)
-    return numpy.argmax(predictions, axis=1)
+    return utils.arg_max(predictions)
 
 
 def test(args, preprocessor):

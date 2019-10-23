@@ -7,6 +7,7 @@ import sklearn
 import arrow
 import os
 import keras
+import matplotlib.pyplot as pyplot
 
 output = {
     "accuracy_values": [],
@@ -23,6 +24,21 @@ output = {
     "auc_prc_value": 0.0,
     "training_time_seconds": []
 }
+
+class_names = ["No Workaround",
+               "injured_responsibility",
+               "manipulated_data",
+               "repeated_activity",
+               "substituted_activity",
+               "interchanged_activity",
+               "bypassed_activity",
+               "added_activity",
+               "added_activity"
+               ]
+
+
+def arg_max(list_):
+    return numpy.argmax(list_, axis=1)
 
 
 def convert_label_to_categorical(label):
@@ -72,7 +88,6 @@ def clear_measurement_file(args):
     open('./results/output_%s.csv' % (args.data_set[:-4]), "w").close()
 
 
-
 def get_output(args, preprocessor, _output):
     prefix = 0
     prefix_all_enabled = 1
@@ -119,8 +134,65 @@ def get_output(args, preprocessor, _output):
     return _output
 
 
-def print_output_confusion_matrix(ground_truth_label, predicted_label):
-    llprint(sklearn.metrics.confusion_matrix(ground_truth_label, predicted_label))
+def plot_confusion_matrix(label_ground_truth, label_prediction,
+                          classes=class_names,
+                          normalize=False,
+                          title=None,
+                          cmap=pyplot.cm.Blues):
+    """
+    This function prints and plots the confusion matrix.
+    Normalization can be applied by setting `normalize=True`.
+    """
+    numpy.set_printoptions(precision=2)
+
+    label_ground_truth = numpy.array(label_ground_truth)
+    label_prediction = numpy.array(label_prediction)
+
+    if not title:
+        if normalize:
+            title = 'Normalized confusion matrix'
+        else:
+            title = 'Confusion matrix, without normalization'
+
+    cm = sklearn.metrics.confusion_matrix(label_ground_truth, label_prediction)
+    # todo: map to class_names -> classes[]
+    classes = sklearn.utils.multiclass.unique_labels(label_ground_truth, label_prediction)
+    classes_ = []
+    for element in classes:
+        classes_.append(class_names[element])
+    classes = classes_
+    if normalize:
+        cm = cm.astype('float') / cm.sum(axis=1)[:, numpy.newaxis]
+        print("Normalized confusion matrix")
+    else:
+        print('Confusion matrix, without normalization')
+
+    print(cm)
+
+    fig, ax = pyplot.subplots()
+    im = ax.imshow(cm, interpolation='nearest', cmap=cmap)
+    ax.figure.colorbar(im, ax=ax)
+    ax.set(xticks=numpy.arange(cm.shape[1]),
+           yticks=numpy.arange(cm.shape[0]),
+           xticklabels=classes, yticklabels=classes,
+           title=title,
+           ylabel='True label',
+           xlabel='Predicted label')
+
+    pyplot.setp(ax.get_xticklabels(), rotation=45, ha="right",
+                rotation_mode="anchor")
+
+    # Loop over data dimensions and create text annotations.
+    fmt = '.2f' if normalize else 'd'
+    thresh = cm.max() / 2.
+    for i in range(cm.shape[0]):
+        for j in range(cm.shape[1]):
+            ax.text(j, i, format(cm[i, j], fmt),
+                    ha="center", va="center",
+                    color="white" if cm[i, j] > thresh else "black")
+    fig.tight_layout()
+    pyplot.show()
+    return ax
 
 
 def multi_class_prc_auc_score(ground_truth_label, predicted_label, average='weighted'):
