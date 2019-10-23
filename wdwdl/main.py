@@ -1,8 +1,9 @@
 import wdwdl.config as config
-import wdwdl.predictor as test_dnn
-import wdwdl.trainer as train_dnn
+import wdwdl.predictor as tester
+import wdwdl.trainer as trainer
 from wdwdl.preprocessor import Preprocessor
 import wdwdl.utils as utils
+import keras
 
 if __name__ == '__main__':
 
@@ -13,9 +14,14 @@ if __name__ == '__main__':
     no_outliers = preprocessor.clean_event_log(args)
     # integrate workaround forms
     data_set, label = preprocessor.add_workarounds_to_event_log(args, no_outliers)
+    # convert label
+    label = keras.utils.np_utils.to_categorical(label)
     # split data set
     data_set_train, data_set_test, label_train, label_test = preprocessor.split_validation(data_set, label)
-
+    # train
+    trainer.train_nn_wa_classification(args, data_set_train, label_train)
+    # test
+    
     print(0)
     # preprocessor.split_event_log(args)
 
