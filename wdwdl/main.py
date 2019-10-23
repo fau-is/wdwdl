@@ -12,9 +12,11 @@ if __name__ == '__main__':
     # filter out noise and get no outliers
     no_outliers = preprocessor.clean_event_log(args)
     # integrate workaround forms
-    data, label = preprocessor.add_workarounds_to_event_log(args, no_outliers)
+    data_set, label = preprocessor.add_workarounds_to_event_log(args, no_outliers)
+    # split data set
+    data_set_train, data_set_test, label_train, label_test = preprocessor.split_validation(data_set, label)
 
-
+    print(0)
     # preprocessor.split_event_log(args)
 
     # output = utils.load_output()
