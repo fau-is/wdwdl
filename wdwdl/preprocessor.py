@@ -892,7 +892,6 @@ class Preprocessor(object):
 
         unique_resource = unique_context[0]
 
-
         for index in range(0, max_injures):
             position = numpy.random.randint(0, len(process_instance) - 1)
             unique_resource = [x for x in unique_resource if x != context[position][0]]
@@ -944,12 +943,14 @@ class Preprocessor(object):
 
         return process_instance, context
 
+
     def workaround_substitued_activity(self, process_instance, context, max_substitutions=1):
         """
         Substitute an activity by another activity and its context attributes.
         """
 
         return process_instance, context
+
 
     def workaround_interchanged_activity(self, process_instance, context, max_interchanges=1):
         """
@@ -970,6 +971,7 @@ class Preprocessor(object):
 
         return process_instance, context
 
+
     def workaround_bypassed_activity(self, process_instance, context, max_sequence_size=1):
         """
         Skips an activity or an sequence of of activities and its context attributes.
@@ -984,9 +986,36 @@ class Preprocessor(object):
 
         return process_instance, context
 
-    def workaround_added_activity(self, process_instance, context, max_adds=1):
+
+    def workaround_added_activity(self, process_instance, context, unique_events, max_adds=1):
+        """
+        Adds an activity one or more activities and its context attributes.
+        """
+
+        num_context_attr = len(context[0])
+        for index in range(0, max_adds):
+            position = numpy.random.randint(0, len(process_instance) - 1)
+
+            # event
+            event_new = max(unique_events) + 1
+
+            # context
+            new_context = [0] * num_context_attr
+
+            if position > 0:
+                process_instance = process_instance[:position] + [event_new] + process_instance[position-1:]
+                context = context[:position] + new_context + context[position-1:]
+            else:
+                process_instance = [new_event] + process_instance
+                context = new_context + context
+
+
+
+            process_instance[position][0] = numpy.random.choice(unique_resource)
+
 
         return process_instance, context
+
 
     def add_workarounds_to_event_log(self, args, no_outliers):
 
@@ -1095,6 +1124,7 @@ class Preprocessor(object):
                         self.workaround_added_activity(
                             process_instances_[index],
                             process_instances_context_[index],
+                            unique_events,
                             max_adds=1
                         )
                     process_instances_wa.append(process_instance_wa)
