@@ -884,23 +884,22 @@ class Preprocessor(object):
 
         return no_outliers
 
-    def workaround_injured_responsiblity(self, process_instance, context, max_injures=1):
+    def workaround_injured_responsiblity(self, process_instance, context, unique_context, max_injures=1):
         """
         Change the value of the resource attribute.
         The resource attribute is the first context attribute.
-
-
-
-        max_injures = min(max_injures, len(context))
-
-        for index in range(0, max_injures):
-        random_position =
         """
 
-        print(process_instance)
+        unique_resource = unique_context[0]
 
+
+        for index in range(0, max_injures):
+            position = numpy.random.randint(0, len(process_instance) - 1)
+            unique_resource = [x for x in unique_resource if x != context[position][0]]
+            context[position][0] = numpy.random.choice(unique_resource)
 
         return process_instance, context
+
 
     def workaround_manipulated_data(self, process_instance, context, max_events=1, max_attributes=1):
         """
@@ -924,7 +923,7 @@ class Preprocessor(object):
                 process_instance = process_instance[:start] + [process_instance[start]] * max_repetition_length + process_instance[end-1:]
                 context = context[:start] + [context[start]] * max_repetition_length + context[end-1:]
             else:
-                process_instance = [process_instance[start]] * max_repetition_length + [process_instance[end-1:]]
+                process_instance = [process_instance[start]] * max_repetition_length + process_instance[end-1:]
                 context = [context[start]] * max_repetition_length + context[end-1:]
 
         return process_instance, context
@@ -962,6 +961,7 @@ class Preprocessor(object):
         """
         Skips an activity or an sequence of of activities and its context attributes.
         """
+
         size = numpy.random.randint(1, min(len(process_instance) - 1, max_sequence_size) + 1)
         start = numpy.random.randint(0, len(process_instance) - size)
         end = start + size
@@ -1012,7 +1012,8 @@ class Preprocessor(object):
                         self.workaround_injured_responsiblity(
                             process_instances_[index],
                             process_instances_context_[index],
-                            max_injures=1,
+                            unique_context,
+                            max_injures=1
                         )
                     process_instances_wa.append(process_instance_wa)
                     process_instances_context_wa.append(process_instance_context_wa)
@@ -1036,7 +1037,7 @@ class Preprocessor(object):
                             process_instances_[index],
                             process_instances_context_[index],
                             max_repetitions=1,
-                            max_repetition_length=5
+                            max_repetition_length=10
                         )
                     process_instances_wa.append(process_instance_wa)
                     process_instances_context_wa.append(process_instance_context_wa)
