@@ -1004,14 +1004,10 @@ class Preprocessor(object):
 
             if position > 0:
                 process_instance = process_instance[:position] + [event_new] + process_instance[position-1:]
-                context = context[:position] + new_context + context[position-1:]
+                context = context[:position] + [new_context] + context[position-1:]
             else:
-                process_instance = [new_event] + process_instance
-                context = new_context + context
-
-
-
-            process_instance[position][0] = numpy.random.choice(unique_resource)
+                process_instance = [event_new] + process_instance
+                context = [new_context] + context
 
 
         return process_instance, context
@@ -1047,7 +1043,7 @@ class Preprocessor(object):
 
             if numpy.random.uniform(0, 1) <= probability and len(process_instances_[index]) >= 2:
 
-                workaround_form = int(numpy.random.uniform(1, 7))
+                workaround_form = int(numpy.random.uniform(1, 7 + 1))  # + 1 since it excludes the upper bound
 
                 if workaround_form == 1:  # "injured_responsibility"
                     process_instance_wa, process_instance_context_wa = \
