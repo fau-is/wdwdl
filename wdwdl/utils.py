@@ -281,3 +281,25 @@ def write_output(args, _output, index_fold):
             get_output_value(get_mode(index_fold, args), index_fold, _output, "training_time_seconds", args),
             arrow.now()
         ])
+
+
+def get_unique_events(process_instances_):
+    flat_list = [item for sublist in process_instances_ for item in sublist]
+    unique_events = numpy.unique(numpy.array(flat_list))
+
+    return unique_events
+
+
+def get_unique_context(process_instances_context_):
+    num_context_attr = len(process_instances_context_[0][0])
+    unique_context = []
+
+    for index in range(0, num_context_attr):
+
+
+        flat_list = [item[index] for sublist in process_instances_context_ for item in sublist]
+        unique_context_attr = numpy.unique(numpy.array(flat_list))
+        unique_context.append(unique_context_attr)
+
+    return unique_context
+

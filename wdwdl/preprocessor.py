@@ -888,9 +888,17 @@ class Preprocessor(object):
         """
         Change the value of the resource attribute.
         The resource attribute is the first context attribute.
+
+
+
+        max_injures = min(max_injures, len(context))
+
+        for index in range(0, max_injures):
+        random_position =
         """
-        # random number of adds
-        # random position of adds
+
+        print(process_instance)
+
 
         return process_instance, context
 
@@ -907,6 +915,21 @@ class Preprocessor(object):
         Repeat an activity and its context attributes n times.
         """
 
+        for index in range(0, max_repetitions):
+
+            start = numpy.random.randint(0, len(process_instance)-1)
+            end = start + 1
+
+            if start > 0:
+                process_instance = process_instance[:start] + [process_instance[start]] * max_repetition_length + process_instance[end-1:]
+                context = context[:start] + [context[start]] * max_repetition_length + context[end-1:]
+            else:
+                process_instance = [process_instance[start]] * max_repetition_length + [process_instance[end-1:]]
+                context = [context[start]] * max_repetition_length + context[end-1:]
+
+        return process_instance, context
+
+
         return process_instance, context
 
     def workaround_substitued_activity(self, process_instance, context, max_substitutions=1):
@@ -921,12 +944,30 @@ class Preprocessor(object):
         Pairwise change of two activities and its context attributes.
         """
 
+        for index in range(0, max_interchanges):
+
+            start = numpy.random.randint(0, len(process_instance)-1)
+            end = start + 1
+
+            if start > 0:
+                process_instance = process_instance[:start] + [process_instance[end]] + [process_instance[start]] + process_instance[end:]
+                context = context[:start] + [context[end]] + [context[start]] + context[end:]
+            else:
+                process_instance = [process_instance[end]] + [process_instance[start]] + process_instance[end:]
+                context = [context[end]] + [context[start]] + context[end:]
+
         return process_instance, context
 
     def workaround_bypassed_activity(self, process_instance, context, max_sequence_size=1):
         """
         Skips an activity or an sequence of of activities and its context attributes.
         """
+        size = numpy.random.randint(1, min(len(process_instance) - 1, max_sequence_size) + 1)
+        start = numpy.random.randint(0, len(process_instance) - size)
+        end = start + size
+
+        process_instance = process_instance[:start] + process_instance[end:]
+        context = context[:start] + context[end:]
 
         return process_instance, context
 
@@ -953,10 +994,17 @@ class Preprocessor(object):
         # add workaround
         process_instances_wa = []
         process_instances_context_wa = []
+        unique_events = []
+        unique_context = []
         label = [0] * len(process_instances_)  # 0 means that a process instance does not include a workaround
-        probability = 0.3  # 30% of the process instances include workarounds
+        probability = 0.9  # 30% of the process instances include workarounds
+        unique_events = utils.get_unique_events(process_instances_)
+        unique_context = utils.get_unique_context(process_instances_context_)
+
         for index in range(0, len(process_instances_)):
-            if numpy.random.uniform(0, 1) <= probability:
+
+            if numpy.random.uniform(0, 1) <= probability and len(process_instances_[index]) >= 2:
+
                 workaround_form = int(numpy.random.uniform(1, 7))
 
                 if workaround_form == 1:  # "injured_responsibility"
@@ -1021,7 +1069,7 @@ class Preprocessor(object):
                         self.workaround_bypassed_activity(
                             process_instances_[index],
                             process_instances_context_[index],
-                            max_sequence_size=1
+                            max_sequence_size=3
                         )
                     process_instances_wa.append(process_instance_wa)
                     process_instances_context_wa.append(process_instance_context_wa)
