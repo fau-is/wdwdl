@@ -944,7 +944,7 @@ class Preprocessor(object):
         return process_instance, context
 
 
-    def workaround_substitued_activity(self, process_instance, context, unique_events, max_substitutions=1):
+    def workaround_substituted_activity(self, process_instance, context, unique_events, max_substitutions=1):
         """
         Substitute an activity by another activity and its context attributes.
         """
@@ -1104,7 +1104,7 @@ class Preprocessor(object):
 
                 elif workaround_form == 4:  # "substituted_activity"
                     process_instance_wa, process_instance_context_wa = \
-                        self.workaround_substitued_activity(
+                        self.workaround_substituted_activity(
                             process_instances_[index],
                             process_instances_context_[index],
                             unique_events,
