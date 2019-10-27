@@ -944,10 +944,30 @@ class Preprocessor(object):
         return process_instance, context
 
 
-    def workaround_substitued_activity(self, process_instance, context, max_substitutions=1):
+    def workaround_substitued_activity(self, process_instance, context, unique_events, max_substitutions=1):
         """
         Substitute an activity by another activity and its context attributes.
         """
+
+        num_context_attr = len(context[0])
+        unique_events = [x for x in unique_events if x not in process_instance]
+
+        for index in range(0, max_substitutions):
+            position = numpy.random.randint(0, len(process_instance) - 1)
+
+
+            # event
+            event_new = numpy.random.choice(unique_events)
+
+            # context
+            new_context = [0] * num_context_attr
+
+            if position > 0:
+                process_instance = process_instance[:position] + [event_new] + process_instance[position:]
+                context = context[:position] + [new_context] + context[position:]
+            else:
+                process_instance = [event_new] + process_instance[position:]
+                context = [new_context] + context[position:]
 
         return process_instance, context
 
@@ -1000,14 +1020,14 @@ class Preprocessor(object):
             event_new = max(unique_events) + 1
 
             # context
-            new_context = [0] * num_context_attr
+            context_new = [0] * num_context_attr
 
             if position > 0:
                 process_instance = process_instance[:position] + [event_new] + process_instance[position-1:]
-                context = context[:position] + [new_context] + context[position-1:]
+                context = context[:position] + [context_new] + context[position-1:]
             else:
                 process_instance = [event_new] + process_instance
-                context = [new_context] + context
+                context = [context_new] + context
 
 
         return process_instance, context
@@ -1087,6 +1107,7 @@ class Preprocessor(object):
                         self.workaround_substitued_activity(
                             process_instances_[index],
                             process_instances_context_[index],
+                            unique_events,
                             max_substitutions=1
                         )
                     process_instances_wa.append(process_instance_wa)
