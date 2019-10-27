@@ -922,8 +922,6 @@ class Preprocessor(object):
         return process_instance, context
 
 
-        return process_instance, context
-
     def workaround_repeated_activity(self, process_instance, context, max_repetitions=1, max_repetition_length=5):
         """
         Repeat an activity and its context attributes n times.
