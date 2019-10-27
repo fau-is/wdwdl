@@ -901,11 +901,26 @@ class Preprocessor(object):
         return process_instance, context
 
 
-    def workaround_manipulated_data(self, process_instance, context, max_events=1, max_attributes=1):
+    def workaround_manipulated_data(self, process_instance, context, unique_context, max_events=1, max_attributes=1):
         """
         Change the value of data attributes.
         Data attributes are all context attributes without the resource attribute.
         """
+
+        num_attr = len(context[0])
+        for index_event in range(0, max_events):
+
+            for index_attr in range(0, max_attributes):
+                # random event
+                event = numpy.random.randint(0, len(process_instance) - 1)
+
+                # random attribute
+                attr = numpy.random.randint(1, num_attr)
+                unique_context_attr = [x for x in unique_context[attr] if x != context[event][attr]]
+                context[event][attr] = numpy.random.choice(unique_context_attr)
+
+        return process_instance, context
+
 
         return process_instance, context
 
@@ -1024,6 +1039,7 @@ class Preprocessor(object):
                         self.workaround_manipulated_data(
                             process_instances_[index],
                             process_instances_context_[index],
+                            unique_context,
                             max_events=1,
                             max_attributes=1
                         )
