@@ -8,13 +8,12 @@ def train_nn_wa_classification(args, data_set, label):
     """ We use an deep artificial neural network for learning the mapping of process instances and the label. """
 
     input_layer = keras.layers.Input(shape=(data_set.shape[1], ), name='input_layer')
-    layer_1 = keras.layers.Dropout(0.1)(input_layer)
-    layer_1 = keras.layers.Dense(500, activation='relu')(layer_1)
+    layer_1 = keras.layers.Dense(100, activation='tanh')(input_layer)
     layer_2 = keras.layers.Dropout(0.2)(layer_1)
-    layer_2 = keras.layers.Dense(500, activation='relu')(layer_2)
+    layer_2 = keras.layers.Dense(100, activation='tanh')(layer_2)
     layer_3 = keras.layers.Dropout(0.2)(layer_2)
-    layer_3 = keras.layers.Dense(500, activation='relu')(layer_3)
-    b1 = keras.layers.Dropout(0.3)(layer_3)
+    layer_3 = keras.layers.Dense(100, activation='tanh')(layer_3)
+    b1 = keras.layers.Dropout(0.2)(layer_3)
     output = keras.layers.core.Dense(label.shape[1], activation='softmax', name='output',
                                            kernel_initializer='glorot_uniform')(b1)
 

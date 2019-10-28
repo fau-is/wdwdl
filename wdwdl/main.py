@@ -23,7 +23,6 @@ if __name__ == '__main__':
     # evaluate
     utils.plot_confusion_matrix(utils.arg_max(label_test).tolist(), predictions.tolist())
 
-    print(0)
     # preprocessor.split_event_log(args)
 
     # output = utils.load_output()

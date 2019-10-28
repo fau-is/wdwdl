@@ -143,7 +143,7 @@ def plot_confusion_matrix(label_ground_truth, label_prediction,
     This function prints and plots the confusion matrix.
     Normalization can be applied by setting `normalize=True`.
     """
-    numpy.set_printoptions(precision=2)
+    numpy.set_printoptions(precision=3)
 
     label_ground_truth = numpy.array(label_ground_truth)
     label_prediction = numpy.array(label_prediction)
