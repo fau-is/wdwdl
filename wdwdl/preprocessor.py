@@ -836,6 +836,11 @@ class Preprocessor(object):
     def clean_event_log(self, args):
         """ clean the event log with an autoencoder. """
 
+        # for sharing the gpu capacity among parallel users on the workstation
+        #config = tf.ConfigProto()
+        #config.gpu_options.per_process_gpu_memory_fraction = 0.2
+        #keras.backend.tensorflow_backend.set_session(tf.Session(config=config))
+
         utils.llprint("Create data set as tensor ... \n")
         features_data = self.get_2d_data_tensor()
         features_data_df = pandas.DataFrame(data=features_data[0:, 0:],
@@ -845,7 +850,7 @@ class Preprocessor(object):
         # autoencoder
         input_dimension = features_data.shape[1]
         encoding_dimension = 100
-        learning_epochs = 100
+        learning_epochs = 20
 
         input_layer = keras.layers.Input(shape=(input_dimension,))
         encoder = keras.layers.Dense(encoding_dimension, activation='tanh')(input_layer)
@@ -878,8 +883,8 @@ class Preprocessor(object):
         df_error = pandas.DataFrame({'reconstruction_error': mse}, index=[i for i in range(features_data.shape[0])])
 
         plot_error = self.plot_reconstruction_error(df_error, 'reconstruction_error')
-        # print(plotly.offline.plot(plot_error))
-        no_outliers = df_error.index[df_error['reconstruction_error'] <= 0.2].tolist()
+        print(plotly.offline.plot(plot_error))
+        no_outliers = df_error.index[df_error['reconstruction_error'] <= 0.1].tolist()  # < 0.0005
         # features_data = features_data_df.drop(features_data_df.index[outliers])
 
         return no_outliers
@@ -940,8 +945,6 @@ class Preprocessor(object):
 
         return process_instance, context
 
-
-        return process_instance, context
 
 
     def workaround_substituted_activity(self, process_instance, context, unique_events, max_substitutions=1):
@@ -1045,7 +1048,7 @@ class Preprocessor(object):
         process_instances_ = []
         process_instances_context_ = []
         for index in range(0, len(process_instances)):
-            if index in no_outliers:
+            if index in no_outliers and len(process_instances[index]) >= 2:
                 process_instances_.append(process_instances[index])
                 process_instances_context_.append(process_instances_context[index])
 
@@ -1055,13 +1058,14 @@ class Preprocessor(object):
         unique_events = []
         unique_context = []
         label = [0] * len(process_instances_)  # 0 means that a process instance does not include a workaround
-        probability = 0.9  # 30% of the process instances include workarounds
+        probability = 0.3  # 30% of the process instances include workarounds
         unique_events = utils.get_unique_events(process_instances_)
         unique_context = utils.get_unique_context(process_instances_context_)
 
+
         for index in range(0, len(process_instances_)):
 
-            if numpy.random.uniform(0, 1) <= probability and len(process_instances_[index]) >= 2:
+            if numpy.random.uniform(0, 1) <= probability:
 
                 workaround_form = int(numpy.random.uniform(1, 7 + 1))  # + 1 since it excludes the upper bound
 
@@ -1152,29 +1156,31 @@ class Preprocessor(object):
                 process_instances_wa.append(process_instances_[index])
                 process_instances_context_wa.append(process_instances_context_[index])
 
+
         # from instance-based list to event-based numpy array
         number_of_events = sum(list([len(element) for element in process_instances_wa]))
         data_set = numpy.zeros((number_of_events, 3 + len(process_instances_context_wa[0][0])))  # case, event and time
 
         index_ = 0
-        for index in range(0, len(process_instances_wa)):
+        for index_instance in range(0, len(process_instances_wa)):
 
-            for index_event in range(0, len(process_instances_wa[index])):
+            for index_event in range(0, len(process_instances_wa[index_instance])):
                 # case
-                data_set[index_, 0] = index
+                data_set[index_, 0] = index_instance
 
                 # event
-                data_set[index_, 1] = process_instances_wa[index][index_event]
+                data_set[index_, 1] = process_instances_wa[index_instance][index_event]
 
                 # time
                 data_set[index_, 2] = 0  # only for filling the gap
 
                 # context attributes
-                for index_context in range(0, len(process_instances_context_wa[index][index_event])):
-                    data_set[index_, index_context + 3] = process_instances_context_wa[index][index_event][
+                for index_context in range(0, len(process_instances_context_wa[index_instance][index_event])):
+                    data_set[index_, index_context + 3] = process_instances_context_wa[index_instance][index_event][
                         index_context]
 
                 index_ += 1
+
 
         # from event-based numpy array to event-based pandas data frame
         data_set_df = pandas.DataFrame(data=data_set[0:, 0:],
@@ -1184,9 +1190,10 @@ class Preprocessor(object):
         # reset data structure for encoding
         self.data_structure['encoding']['event_ids'] = {}
         self.data_structure['encoding']['context_attributes'] = []
+        self.data_structure['encoding']['eventlog_df'] = data_set_df
 
         # encoding of columns
-        data_set_df = self.encode_eventlog(args, eventlog_df)
+        data_set_df = self.encode_eventlog(args, data_set_df)
 
         # update of data structure
         # num_values_context will be automatically set based on encode_eventlog
@@ -1206,5 +1213,8 @@ class Preprocessor(object):
 
         # from sequence to tensor
         data_set = self.get_2d_data_tensor()
+
+        print(len(label))
+        print(data_set.shape[0])
 
         return data_set, label

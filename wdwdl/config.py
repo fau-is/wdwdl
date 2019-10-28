@@ -7,7 +7,7 @@ def load():
     parser = argparse.ArgumentParser()
 
     # dnn
-    parser.add_argument('--dnn_num_epochs', default=1, type=int)
+    parser.add_argument('--dnn_num_epochs', default=100, type=int)
     parser.add_argument('--dnn_architecture', default=0, type=int)
 
     # pre-processing (min_max_norm, int, bin, onehot or hash)
@@ -27,7 +27,7 @@ def load():
     parser.add_argument('--batch_size_test', default=1, type=int)
 
     # data
-    parser.add_argument('--data_set', default="bpi2012_w_converted_sample.csv")
+    parser.add_argument('--data_set', default="bpi2019_converted_full_emb_sel.csv")
     parser.add_argument('--data_dir', default="./data/")
     parser.add_argument('--checkpoint_dir', default="./checkpoints/")
     parser.add_argument('--result_dir', default="./results/")

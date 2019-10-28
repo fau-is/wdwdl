@@ -101,6 +101,5 @@ def test(args, preprocessor):
                     dls = 1 - (damerau_levenshtein_distance(str(prediction), str(ground_truth)) / max(len(prediction),
                                                                                                       len(ground_truth)))
                     output.append(dls)
-                    # output.append(1 - distance.jaccard(prediction, ground_truth))
 
                     result_writer.writerow(output)
