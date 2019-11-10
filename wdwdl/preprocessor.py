@@ -959,7 +959,6 @@ class Preprocessor(object):
         for index in range(0, max_substitutions):
             position = numpy.random.randint(0, len(process_instance) - 1)
 
-
             # event
             event_new = numpy.random.choice(unique_events)
 
