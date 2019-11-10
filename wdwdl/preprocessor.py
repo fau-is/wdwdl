@@ -926,7 +926,7 @@ class Preprocessor(object):
         return process_instance, context
 
 
-    def workaround_repeated_activity(self, process_instance, context, max_repetitions=1, max_repetition_length=5):
+    def workaround_repeated_activity(self, process_instance, context, max_repetitions=1, max_repetition_length=5, min_repetition_length=3):
         """
         Repeat an activity and its context attributes n times.
         """
@@ -935,13 +935,14 @@ class Preprocessor(object):
 
             start = numpy.random.randint(0, len(process_instance)-1)
             end = start + 1
+            number_repetitions = numpy.random.randint(min_repetition_length, max_repetition_length + 1)
 
             if start > 0:
-                process_instance = process_instance[:start] + [process_instance[start]] * max_repetition_length + process_instance[end-1:]
-                context = context[:start] + [context[start]] * max_repetition_length + context[end-1:]
+                process_instance = process_instance[:start] + [process_instance[start]] * number_repetitions + process_instance[end-1:]
+                context = context[:start] + [context[start]] * number_repetitions + context[end-1:]
             else:
-                process_instance = [process_instance[start]] * max_repetition_length + process_instance[end-1:]
-                context = [context[start]] * max_repetition_length + context[end-1:]
+                process_instance = [process_instance[start]] * number_repetitions + process_instance[end-1:]
+                context = [context[start]] * number_repetitions + context[end-1:]
 
         return process_instance, context
 
@@ -1012,7 +1013,7 @@ class Preprocessor(object):
 
     def workaround_added_activity(self, process_instance, context, unique_events, max_adds=1):
         """
-        Adds an activity one or more activities and its context attributes.
+        Adds an activity and its context attributes.
         """
 
         num_context_attr = len(context[0])
@@ -1100,7 +1101,8 @@ class Preprocessor(object):
                             process_instances_[index],
                             process_instances_context_[index],
                             max_repetitions=1,
-                            max_repetition_length=10
+                            max_repetition_length=10,
+                            min_repetition_length=3
                         )
                     process_instances_wa.append(process_instance_wa)
                     process_instances_context_wa.append(process_instance_context_wa)
