@@ -87,61 +87,15 @@ def clear_measurement_file(args):
     open('./results/output_%s.csv' % (args.data_set[:-4]), "w").close()
 
 
-def get_output(args, preprocessor, _output):
-    prefix = 0
-    prefix_all_enabled = 1
-
-    predicted_label = list()
-    ground_truth_label = list()
-
-    if not args.cross_validation:
-        result_dir_fold = \
-            args.result_dir + \
-            args.data_set.split(".csv")[0] + \
-            "__" + args.task + \
-            "_0.csv"
-    else:
-        result_dir_fold = \
-            args.result_dir + \
-            args.data_set.split(".csv")[0] + \
-            "__" + args.task + \
-            "_%d" % preprocessor.data_structure['support']['iteration_cross_validation'] + ".csv"
-
-    with open(result_dir_fold, 'r') as result_file_fold:
-        result_reader = csv.reader(result_file_fold, delimiter=';', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        next(result_reader)
-
-        for row in result_reader:
-            if not row:
-                continue
-            else:
-                if int(row[1]) == prefix or prefix_all_enabled == 1:
-                    ground_truth_label.append(row[2])
-                    predicted_label.append(row[3])
-
-    _output["accuracy_values"].append(sklearn.metrics.accuracy_score(ground_truth_label, predicted_label))
-    _output["precision_values"].append(
-        sklearn.metrics.precision_score(ground_truth_label, predicted_label, average='weighted'))
-    _output["recall_values"].append(
-        sklearn.metrics.recall_score(ground_truth_label, predicted_label, average='weighted'))
-    _output["f1_values"].append(sklearn.metrics.f1_score(ground_truth_label, predicted_label, average='weighted'))
-    _output["auc_roc_values"].append(multi_class_roc_auc_score(ground_truth_label, predicted_label))
-    # we use the average precision at different threshold values as auc of the pr-curve
-    # and not the auc-pr-curve with the trapezoidal rule / linear interpolation, because it could be too optimistic
-    _output["auc_prc_values"].append(multi_class_prc_auc_score(ground_truth_label, predicted_label))
-
-    return _output
-
-
 def calculate_and_print_output(label_ground_truth, label_prediction):
     """
     This function calculate and prints the measures.
     """
+
     numpy.set_printoptions(precision=3)
 
     label_ground_truth = numpy.array(label_ground_truth)
     label_prediction = numpy.array(label_prediction)
-
 
     llprint("Accuracy avg: %f\n" % sklearn.metrics.accuracy_score(label_ground_truth, label_prediction))
     llprint("Precision avg: %f\n" % sklearn.metrics.precision_score(label_ground_truth, label_prediction, average='weighted'))
