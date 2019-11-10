@@ -850,7 +850,7 @@ class Preprocessor(object):
         # autoencoder
         input_dimension = features_data.shape[1]
         encoding_dimension = 100
-        learning_epochs = 20
+        learning_epochs = 1
 
         input_layer = keras.layers.Input(shape=(input_dimension,))
         encoder = keras.layers.Dense(encoding_dimension, activation='tanh')(input_layer)

@@ -25,15 +25,14 @@ output = {
     "training_time_seconds": []
 }
 
-class_names = ["No Workaround",
-               "injured_responsibility",
-               "manipulated_data",
-               "repeated_activity",
-               "substituted_activity",
-               "interchanged_activity",
-               "bypassed_activity",
-               "added_activity",
-               "added_activity"
+class_names = ["No workaround",
+               "Injured responsibility",
+               "Manipulated data",
+               "Repeated activity",
+               "Substituted activity",
+               "Interchanged activity",
+               "Bypassed activity",
+               "Added activity"
                ]
 
 
