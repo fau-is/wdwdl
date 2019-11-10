@@ -133,8 +133,27 @@ def get_output(args, preprocessor, _output):
     return _output
 
 
+def calculate_and_print_output(label_ground_truth, label_prediction):
+    """
+    This function calculate and prints the measures.
+    """
+    numpy.set_printoptions(precision=3)
+
+    label_ground_truth = numpy.array(label_ground_truth)
+    label_prediction = numpy.array(label_prediction)
+
+
+    llprint("Accuracy avg: %f\n" % sklearn.metrics.accuracy_score(label_ground_truth, label_prediction))
+    llprint("Precision avg: %f\n" % sklearn.metrics.precision_score(label_ground_truth, label_prediction, average='weighted'))
+    llprint("Recall avg: %f\n" % sklearn.metrics.recall_score(label_ground_truth, label_prediction, average='weighted'))
+    llprint("F1-score avg: %f\n" % sklearn.metrics.f1_score(label_ground_truth, label_prediction, average='weighted'))
+    llprint("Auc-roc avg: %f\n" % multi_class_roc_auc_score(label_ground_truth, label_prediction))
+    # we use the average precision at different threshold values as auc of the pr-curve
+    # and not the auc-pr-curve with the trapezoidal rule / linear interpolation, because it could be too optimistic
+    llprint("Auc-prc avg: %f\n" % multi_class_prc_auc_score(label_ground_truth, label_prediction))
+
+
 def plot_confusion_matrix(label_ground_truth, label_prediction,
-                          classes=class_names,
                           normalize=False,
                           title=None,
                           cmap=pyplot.cm.Blues):
@@ -214,74 +233,6 @@ def multi_class_roc_auc_score(ground_truth_label, predicted_label, average='weig
     return sklearn.metrics.roc_auc_score(ground_truth_label, predicted_label, average=average)
 
 
-def print_output(args, _output, index_fold):
-    if args.cross_validation and index_fold < args.num_folds:
-        llprint("\nAccuracy of fold %i: %f\n" % (index_fold, _output["accuracy_values"][index_fold]))
-        llprint("Precision of fold %i: %f\n" % (index_fold, _output["precision_values"][index_fold]))
-        llprint("Recall of fold %i: %f\n" % (index_fold, _output["recall_values"][index_fold]))
-        llprint("F1-score of fold %i: %f\n" % (index_fold, _output["f1_values"][index_fold]))
-        llprint("Auc-roc of fold %i: %f\n" % (index_fold, _output["auc_roc_values"][index_fold]))
-        llprint("Auc-prc of fold %i: %f\n" % (index_fold, _output["auc_prc_values"][index_fold]))
-        llprint("Training time of fold %i: %f seconds\n\n" % (index_fold, _output["training_time_seconds"][index_fold]))
-
-    else:
-        llprint("\nAccuracy avg: %f\n" % (avg(_output["accuracy_values"])))
-        llprint("Precision avg: %f\n" % (avg(_output["precision_values"])))
-        llprint("Recall avg: %f\n" % (avg(_output["recall_values"])))
-        llprint("F1-score avg: %f\n" % (avg(_output["f1_values"])))
-        llprint("Auc-roc avg: %f\n" % (avg(_output["auc_roc_values"])))
-        llprint("Auc-prc avg: %f\n" % (avg(_output["auc_prc_values"])))
-        llprint("Training time avg: %f seconds" % (avg(_output["training_time_seconds"])))
-
-
-def get_mode(index_fold, args):
-    """ Gets the mode - split, fold or avg. """
-
-    if index_fold == -1:
-        return "split-%s" % args.split_rate_test
-    elif index_fold != args.num_folds:
-        return "fold%s" % index_fold
-    else:
-        return "avg"
-
-
-def get_output_value(_mode, _index_fold, _output, measure, args):
-    """ If fold < max number of folds in cross validation than use a specific value, else avg works. In addition,
-    this holds for split. """
-
-    if _mode != "split-%s" % args.split_rate_test and _mode != "avg":
-        return _output[measure][_index_fold]
-    else:
-        return avg(_output[measure])
-
-
-def write_output(args, _output, index_fold):
-    """ Writes the output. """
-
-    with open('./results/output_%s_%s.csv' % (args.data_set[:-4], args.task), mode='a', newline='') as file:
-        writer = csv.writer(file, delimiter=';', quoting=csv.QUOTE_NONE, escapechar=' ')
-
-        # if file is empty
-        if os.stat('./results/output_%s_%s.csv' % (args.data_set[:-4], args.task)).st_size == 0:
-            writer.writerow(
-                ["experiment[ds-cat_enc-dl_arch]", "mode", "validation", "accuracy", "precision", "recall", "f1-score",
-                 "auc-roc", "auc-prc", "training-time",
-                 "time-stamp"])
-        writer.writerow([
-            "%s-%s-%s" % (args.data_set[:-4], args.encoding_cat, args.dnn_architecture),  # experiment
-            get_mode(index_fold, args),  # mode
-            "cross-validation" if args.cross_validation else "split-validation",  # validation
-            get_output_value(get_mode(index_fold, args), index_fold, _output, "accuracy_values", args),
-            get_output_value(get_mode(index_fold, args), index_fold, _output, "precision_values", args),
-            get_output_value(get_mode(index_fold, args), index_fold, _output, "recall_values", args),
-            get_output_value(get_mode(index_fold, args), index_fold, _output, "f1_values", args),
-            get_output_value(get_mode(index_fold, args), index_fold, _output, "auc_roc_values", args),
-            get_output_value(get_mode(index_fold, args), index_fold, _output, "auc_prc_values", args),
-            get_output_value(get_mode(index_fold, args), index_fold, _output, "training_time_seconds", args),
-            arrow.now()
-        ])
-
-
 def get_unique_events(process_instances_):
     flat_list = [item for sublist in process_instances_ for item in sublist]
     unique_events = numpy.unique(numpy.array(flat_list))
@@ -294,7 +245,6 @@ def get_unique_context(process_instances_context_):
     unique_context = []
 
     for index in range(0, num_context_attr):
-
 
         flat_list = [item[index] for sublist in process_instances_context_ for item in sublist]
         unique_context_attr = numpy.unique(numpy.array(flat_list))
