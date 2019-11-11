@@ -1022,6 +1022,8 @@ class Preprocessor(object):
         """
 
         num_context_attr = len(context[0])
+        unique_events = [x for x in unique_events if x not in process_instance]
+
         for index in range(0, max_adds):
             position = numpy.random.randint(0, len(process_instance) - 1)
 
