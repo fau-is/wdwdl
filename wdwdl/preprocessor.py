@@ -850,7 +850,6 @@ class Preprocessor(object):
         # autoencoder
         input_dimension = features_data.shape[1]
         encoding_dimension = 100
-        learning_epochs = 1
 
         input_layer = keras.layers.Input(shape=(input_dimension,))
         encoder = keras.layers.Dense(encoding_dimension, activation='tanh')(input_layer)
@@ -867,8 +866,8 @@ class Preprocessor(object):
         autoencoder.compile(optimizer='adam', loss='mse')
 
         history = autoencoder.fit(features_data, features_data,
-                                  epochs=learning_epochs,
-                                  batch_size=256,
+                                  epochs=args.dnn_num_epochs_auto,
+                                  batch_size=args.batch_size_train,
                                   shuffle=True,
                                   validation_split=0.1,
                                   )

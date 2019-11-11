@@ -8,6 +8,7 @@ def load():
 
     # dnn
     parser.add_argument('--dnn_num_epochs', default=1, type=int)
+    parser.add_argument('--dnn_num_epochs_auto', default=1, type=int)
     parser.add_argument('--dnn_architecture', default=0, type=int)
 
     # pre-processing (min_max_norm, int, bin, onehot or hash)
@@ -23,7 +24,7 @@ def load():
     parser.add_argument('--num_folds', default=3, type=int)  # 10
     parser.add_argument('--cross_validation', default=False, type=utils.str2bool)
     parser.add_argument('--split_rate_test', default=0.7, type=float)  # only if cross validation is deactivated
-    parser.add_argument('--batch_size_train', default=256, type=int)  # LSTM 256 #dnc 1
+    parser.add_argument('--batch_size_train', default=256, type=int)  # LSTM 256
     parser.add_argument('--batch_size_test', default=1, type=int)
 
     # data
