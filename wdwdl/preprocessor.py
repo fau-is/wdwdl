@@ -49,7 +49,8 @@ class Preprocessor(object):
             'max_length_process_instance': 0,
             'num_attributes_context': 0,
             'num_attributes_control_flow': 3,  # process instance id, event id and timestamp
-            'num_process_instances': 0
+            'num_process_instances': 0,
+            'flag_pred_split': True
         },
 
         'data': {
@@ -70,6 +71,11 @@ class Preprocessor(object):
                 'process_instances': [],
                 'context_attributes': [],
                 'event_ids': []
+            },
+            'predict': {
+                'process_instances': [],
+                'context_attributes': [],
+                'event_ids': []
             }
         }
     }
@@ -81,9 +87,10 @@ class Preprocessor(object):
         self.data_structure['support']['encoded_data_dir'] = r'%s' % args.data_dir + r'encoded_%s' % args.data_set
 
         eventlog_df = pandas.read_csv(self.data_structure['support']['data_dir'], sep=';')
-        self.data_structure['encoding']['eventlog_df'] = eventlog_df
-        eventlog_df = self.encode_eventlog(args, eventlog_df)
 
+        self.data_structure['encoding']['eventlog_df'] = eventlog_df
+
+        eventlog_df = self.encode_eventlog(args, eventlog_df)
         self.set_number_control_flow_attributes()
 
         self.get_sequences_from_encoded_eventlog(eventlog_df)
@@ -118,6 +125,7 @@ class Preprocessor(object):
         self.data_structure['meta']['num_features'] = self.data_structure['meta']['num_event_ids'] + \
                                                       self.data_structure['meta']['num_attributes_context']
         self.set_number_values_features()
+
 
     def set_number_values_features(self):
         self.data_structure['encoding']['num_values_features'] = self.data_structure['encoding'][
@@ -505,6 +513,20 @@ class Preprocessor(object):
             self.add_data_to_data_structure(context_attributes_process_instance, 'context_attributes_process_instances')
         self.data_structure['meta']['num_process_instances'] += 1
 
+        # pick out process instances for validation; only at the beginning
+        if self.data_structure["meta"]["flag_pred_split"]:
+            ids_data_set, ids_pred_set, _, _ = \
+                self.split_validation(self.data_structure["data"]["ids_process_instances"], self.data_structure["data"]["ids_process_instances"], 0.1)
+            # get data for pred set
+            self.data_structure["data"]["predict"]["process_instances"] = [self.data_structure["data"]["process_instances"][index] for index in range(len(self.data_structure["data"]["process_instances"])) if index in ids_pred_set]
+            self.data_structure["data"]["predict"]["context_attributes"] = [self.data_structure["data"]["context_attributes_process_instances"][index] for index in range(len(self.data_structure["data"]["context_attributes_process_instances"])) if index in ids_pred_set]
+            self.data_structure["data"]["predict"]["event_ids"] = ids_pred_set
+            # remove pred set from data set
+            self.data_structure["data"]["process_instances"] = [self.data_structure["data"]["process_instances"][index] for index in range(len(self.data_structure["data"]["process_instances"])) if index in ids_data_set]
+            self.data_structure["data"]["context_attributes_process_instances"] = [self.data_structure["data"]["context_attributes_process_instances"][index] for index in range(len(self.data_structure["data"]["context_attributes_process_instances"])) if index in ids_data_set]
+            self.data_structure["data"]["ids_process_instances"] = ids_data_set
+            self.data_structure["meta"]["flag_pred_split"] = False
+
     def check_for_context_attributes_df(self, event):
 
         if len(event) == self.data_structure['encoding']['num_values_control_flow']:
@@ -590,8 +612,8 @@ class Preprocessor(object):
         return event_type
 
 
-    def split_validation(self, data_set, label):
-        return sklearn.model_selection.train_test_split(data_set, label, test_size=0.3, random_state=0)
+    def split_validation(self, data_set, label, test_size):
+        return sklearn.model_selection.train_test_split(data_set, label, test_size=test_size, random_state=0)
 
 
     def set_indices_k_fold_validation(self):
@@ -721,28 +743,7 @@ class Preprocessor(object):
 
         return data_set
 
-    def get_data_tensor_for_single_prediction(self, args, cropped_process_instance, cropped_context_attributes):
 
-        data_set = self.get_data_tensor(
-            [cropped_process_instance],
-            [cropped_context_attributes],
-            'test')
-
-        # Change structure if CNN LSTM
-        if args.dnn_architecture == 3:
-            data_set = data_set.reshape((
-                data_set.shape[0], 1,
-                self.data_structure['meta']['max_length_process_instance'],
-                self.data_structure['meta']['num_values_features']))
-
-        # Change structure if ConvLSTM
-        if args.dnn_architecture == 4:
-            data_set = data_set.reshape((
-                1, 1, 1,
-                self.data_structure['meta']['max_length_process_instance'],
-                self.data_structure['meta']['num_values_features']))
-
-        return data_set
 
     def get_label_tensor(self, cropped_process_instances, next_events):
         """ Produces a vector-oriented representation of label as 2-dimensional tensor. """
@@ -791,7 +792,6 @@ class Preprocessor(object):
                         event_attributes[index_attribute]
 
                 # context
-
                 context_attributes = context_attributes_process_instances[index_instance][time_step]
                 number_context_attributes = len(context_attributes)
 
@@ -835,11 +835,6 @@ class Preprocessor(object):
 
     def clean_event_log(self, args):
         """ clean the event log with an autoencoder. """
-
-        # for sharing the gpu capacity among parallel users on the workstation
-        #config = tf.ConfigProto()
-        #config.gpu_options.per_process_gpu_memory_fraction = 0.2
-        #keras.backend.tensorflow_backend.set_session(tf.Session(config=config))
 
         utils.llprint("Create data set as tensor ... \n")
         features_data = self.get_2d_data_tensor()
@@ -1051,12 +1046,18 @@ class Preprocessor(object):
 
 
     def add_workarounds_to_event_log(self, args, no_outliers):
-
         # get process instances
         eventlog_df = self.data_structure['encoding']['eventlog_df']
         self.get_sequences_from_raw_eventlog(eventlog_df)
+
+        # remove pred set from raw structures
+        self.data_structure["data"]["process_instances_raw"] = [self.data_structure["data"]["process_instances_raw"][index] for index in range(len(self.data_structure["data"]["process_instances_raw"])) if index in self.data_structure["data"]["ids_process_instances"]]
+        self.data_structure["data"]["context_attributes_process_instances_raw"] = [self.data_structure["data"]["context_attributes_process_instances_raw"][index] for index in range(len(self.data_structure["data"]["context_attributes_process_instances_raw"])) if index in self.data_structure["data"]["ids_process_instances"]]
+
+        # raw strctures
         process_instances = self.data_structure['data']['process_instances_raw']
         process_instances_context = self.data_structure['data']['context_attributes_process_instances_raw']
+
 
         # get process instance without noise
         process_instances_ = []
@@ -1069,13 +1070,10 @@ class Preprocessor(object):
         # add workaround
         process_instances_wa = []
         process_instances_context_wa = []
-        unique_events = []
-        unique_context = []
         label = [0] * len(process_instances_)  # 0 means that a process instance does not include a workaround
         probability = 0.3  # 30% of the process instances include workarounds
         unique_events = utils.get_unique_events(process_instances_)
         unique_context = utils.get_unique_context(process_instances_context_)
-
 
         for index in range(0, len(process_instances_)):
 
@@ -1175,7 +1173,6 @@ class Preprocessor(object):
                 process_instances_wa.append(process_instances_[index])
                 process_instances_context_wa.append(process_instances_context_[index])
 
-
         # from instance-based list to event-based numpy array
         number_of_events = sum(list([len(element) for element in process_instances_wa]))
         data_set = numpy.zeros((number_of_events, 3 + len(process_instances_context_wa[0][0])))  # case, event and time
@@ -1199,7 +1196,6 @@ class Preprocessor(object):
                         index_context]
 
                 index_ += 1
-
 
         # from event-based numpy array to event-based pandas data frame
         data_set_df = pandas.DataFrame(data=data_set[0:, 0:],

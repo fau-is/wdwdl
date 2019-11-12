@@ -19,7 +19,7 @@ if __name__ == '__main__':
     data_set, label = preprocessor.add_workarounds_to_event_log(args, no_outliers)
 
     # split data set
-    data_set_train, data_set_test, label_train, label_test = preprocessor.split_validation(data_set, utils.convert_label_to_categorical(label))
+    data_set_train, data_set_test, label_train, label_test = preprocessor.split_validation(data_set, utils.convert_label_to_categorical(label), 0.2)
 
     # train
     trainer.train_nn_wa_classification(args, data_set_train, label_train)
@@ -30,6 +30,6 @@ if __name__ == '__main__':
     utils.calculate_and_print_output(utils.arg_max(label_test).tolist(), predictions.tolist())
 
     # predict
-
+    # predictions_ = predictor.apply_wa_classification(args, data_set_test)
 
 
