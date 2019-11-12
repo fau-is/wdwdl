@@ -24,7 +24,7 @@ def load():
     parser.add_argument('--num_folds', default=3, type=int)  # 10
     parser.add_argument('--cross_validation', default=False, type=utils.str2bool)
     parser.add_argument('--split_rate_test', default=0.7, type=float)  # only if cross validation is deactivated
-    parser.add_argument('--batch_size_train', default=256, type=int)  # LSTM 256
+    parser.add_argument('--batch_size_train', default=256, type=int)
     parser.add_argument('--batch_size_test', default=1, type=int)
 
     # data

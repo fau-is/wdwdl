@@ -12,12 +12,14 @@ def train_nn_wa_classification(args, data_set, label):
     layer_3 = keras.layers.Dropout(0.2)(layer_2)
     layer_3 = keras.layers.Dense(100, activation='tanh')(layer_3)
     b1 = keras.layers.Dropout(0.2)(layer_3)
+
     output = keras.layers.core.Dense(label.shape[1], activation='softmax', name='output',
                                            kernel_initializer='glorot_uniform')(b1)
 
     model = keras.models.Model(inputs=[input_layer], outputs=[output])
-    optimizer = keras.optimizers.Nadam(lr=args.learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-8,
-                                       schedule_decay=0.004, clipvalue=3)
+    #optimizer = keras.optimizers.Adadelta(lr=1.0, rho=0.95)
+    #optimizer = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, amsgrad=False)
+    optimizer = keras.optimizers.Nadam(lr=args.learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-8, schedule_decay=0.004, clipvalue=3)
     model.compile(loss={'output': 'categorical_crossentropy'}, optimizer=optimizer)
     early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
     model_checkpoint = keras.callbacks.ModelCheckpoint('%sclf_wa_mapping.h5' % args.checkpoint_dir,
