@@ -6,6 +6,9 @@ import sklearn
 import keras
 import matplotlib.pyplot as pyplot
 import random
+import seaborn as sns
+import pandas
+from functools import reduce
 
 output = {
     "accuracy_values": [],
@@ -105,6 +108,47 @@ def calculate_and_print_output(label_ground_truth, label_prediction):
     llprint("Auc-prc: %f\n" % multi_class_prc_auc_score(label_ground_truth, label_prediction))
 
 
+def plot_confusion_matrix2(label_ground_truth, label_prediction, args):
+    label_ground_truth = numpy.array(label_ground_truth)
+    label_prediction = numpy.array(label_prediction)
+
+    classes = sklearn.utils.multiclass.unique_labels(label_ground_truth, label_prediction)
+    classes_ = []
+    for element in classes:
+        classes_.append(class_names[element])
+    classes = classes_
+
+    cms = []
+    cm = sklearn.metrics.confusion_matrix(label_ground_truth, label_prediction)
+    cm_df = pandas.DataFrame(cm, index=classes, columns=classes)
+    cms.append(cm_df)
+
+    def prettify(n):
+        if n > 1000000:
+            return str(numpy.round(n / 1000000, 1)) + 'M'
+        elif n > 1000:
+            return str(numpy.round(n / 1000, 1)) + 'K'
+        else:
+            return str(n)
+
+    cm = reduce(lambda x, y: x.add(y, fill_value=0), cms)
+    annot = cm.applymap(prettify)
+    cm = (cm.T / cm.sum(axis=1)).T
+    fig, g = pyplot.subplots(figsize=(7, 4.5))
+    g = sns.heatmap(cm, annot=annot, fmt='', cmap='Blues', cbar=False, rasterized=True, linewidths=0.1)
+    _ = g.set(ylabel='Actual', xlabel='Prediction')
+
+    for _, spine in g.spines.items():
+        spine.set_visible(True)
+
+
+    pyplot.xticks(rotation=45)
+    fig.tight_layout()
+    fig.savefig(str(args.result_dir + 'cm.pdf'))
+
+    print(label_prediction)
+    print(label_ground_truth)
+
 def plot_confusion_matrix(label_ground_truth, label_prediction,
                           normalize=False,
                           title=None,
@@ -122,15 +166,18 @@ def plot_confusion_matrix(label_ground_truth, label_prediction,
         if normalize:
             title = 'Normalized confusion matrix'
         else:
-            title = 'Confusion matrix, without normalization'
+            title = 'Confusion matrix'
 
     cm = sklearn.metrics.confusion_matrix(label_ground_truth, label_prediction)
+
     # todo: map to class_names -> classes[]
     classes = sklearn.utils.multiclass.unique_labels(label_ground_truth, label_prediction)
     classes_ = []
     for element in classes:
         classes_.append(class_names[element])
     classes = classes_
+
+    cm = (cm.T / cm.sum(axis=1)).T
     if normalize:
         cm = cm.astype('float') / cm.sum(axis=1)[:, numpy.newaxis]
         print("Normalized confusion matrix")

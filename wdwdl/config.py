@@ -7,8 +7,8 @@ def load():
     parser = argparse.ArgumentParser()
 
     # dnn
-    parser.add_argument('--dnn_num_epochs', default=1, type=int)
-    parser.add_argument('--dnn_num_epochs_auto', default=1, type=int)
+    parser.add_argument('--dnn_num_epochs', default=100, type=int)
+    parser.add_argument('--dnn_num_epochs_auto', default=20, type=int)
     parser.add_argument('--dnn_architecture', default=0, type=int)
 
     # pre-processing (min_max_norm, int, bin, onehot or hash)
