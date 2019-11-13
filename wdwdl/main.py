@@ -30,6 +30,7 @@ if __name__ == '__main__':
     utils.calculate_and_print_output(utils.arg_max(label_test).tolist(), predictions.tolist())
 
     # predict
-    # predictions_ = predictor.apply_wa_classification(args, data_set_test)
-
+    data_set_pred = preprocessor.prepare_event_log_for_prediction()
+    predictions_ = predictor.apply_wa_classification(args, data_set_test)
+    print(predictor.get_prediction_frequency(predictions_))
 

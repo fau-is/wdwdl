@@ -138,7 +138,9 @@ class Preprocessor(object):
 
     def set_max_length_process_instance(self):
         self.data_structure['meta']['max_length_process_instance'] = max(
-            [len(x) for x in self.data_structure['data']['process_instances']])
+            max([len(x) for x in self.data_structure['data']['process_instances']]),
+            max([len(x) for x in self.data_structure['data']['predict']['process_instances']])
+        )
 
     def split_event_log(self, args):
 
@@ -574,28 +576,6 @@ class Preprocessor(object):
 
         self.data_structure['data'][structure].append(values)
 
-    def set_training_set(self):
-
-        utils.llprint("Get training instances ... \n")
-        process_instances_train, context_attributes_train, _ = self.set_instances_of_fold('train')
-
-        utils.llprint("Create cropped training instances ... \n")
-        cropped_process_instances, cropped_context_attributes, next_events = \
-            self.get_cropped_instances(
-                process_instances_train,
-                context_attributes_train)
-
-        utils.llprint("Create training set data as tensor ... \n")
-        features_data = self.get_data_tensor(cropped_process_instances,
-                                             cropped_context_attributes,
-                                             'train')
-
-        utils.llprint("Create training set label as tensor ... \n")
-        labels = self.get_label_tensor(cropped_process_instances,
-                                       next_events)
-
-        self.data_structure['data']['train']['features_data'] = features_data
-        self.data_structure['data']['train']['labels'] = labels
 
     def get_event_type(self, predictions):
 
@@ -616,151 +596,42 @@ class Preprocessor(object):
         return sklearn.model_selection.train_test_split(data_set, label, test_size=test_size, random_state=0)
 
 
-    def set_indices_k_fold_validation(self):
-        """ Produces indices for each fold of a k-fold cross-validation. """
+    def get_2d_data_tensor_prediction(self):
+        process_instances = self.data_structure['data']['predict']['process_instances']
+        context_attributes_process_instances = self.data_structure['data']['predict']['context_attributes']
+        number_context_attributes = self.data_structure['encoding']['num_values_context']
+        number_attributes = self.data_structure['encoding']['num_values_features'] - 2  # case + time
+        vector_length = self.data_structure['meta']['max_length_process_instance'] * number_attributes
 
-        k_fold = KFold(n_splits=self.data_structure['support']['num_folds'], random_state=0, shuffle=False)
+        # create structure
+        data_set = numpy.zeros((
+            len(process_instances),
+            vector_length
+        ))
 
-        for train_indices, test_indices in k_fold.split(self.data_structure['data']['process_instances']):
-            self.data_structure['support']['train_index_per_fold'].append(train_indices)
-            self.data_structure['support']['test_index_per_fold'].append(test_indices)
+        # fill data
+        for index_instance in range(0, len(process_instances)):
+            for time_step in range(0, len(process_instances[index_instance]) - 1):  # -1 end marking
 
-    def set_indices_split_validation(self, args):
-        """ Produces indices for train and test set of a split-validation. """
+                # event
+                event_attributes = list(process_instances[index_instance][time_step])
+                number_event_attributes = len(event_attributes)
 
-        shuffle_split = ShuffleSplit(n_splits=1, test_size=args.split_rate_test, random_state=0)
+                for index_attribute in range(0, number_event_attributes):
+                    data_set[index_instance, time_step * (
+                            number_context_attributes + number_event_attributes) + index_attribute] = \
+                        event_attributes[index_attribute]
 
-        for train_indices, test_indices in shuffle_split.split(self.data_structure['data']['process_instances']):
-            self.data_structure['support']['train_index_per_fold'].append(train_indices)
-            self.data_structure['support']['test_index_per_fold'].append(test_indices)
+                # context
+                context_attributes = context_attributes_process_instances[index_instance][time_step]
+                number_context_attributes = len(context_attributes)
 
-    def set_instances_of_fold(self, mode):
-        """ Retrieves instances of a fold. """
-
-        process_instances_of_fold = []
-        context_attributes_of_fold = []
-        event_ids_of_fold = []
-
-        for value in self.data_structure['support'][mode + '_index_per_fold'][
-            self.data_structure['support']['iteration_cross_validation']]:
-            process_instances_of_fold.append(self.data_structure['data']['process_instances'][value])
-            event_ids_of_fold.append(self.data_structure['data']['ids_process_instances'][value])
-
-            if self.data_structure['meta']['num_attributes_context'] > 0:
-                context_attributes_of_fold.append(
-                    self.data_structure['data']['context_attributes_process_instances'][value])
-
-        if mode == 'train':
-            self.data_structure['data']['train']['process_instances'] = process_instances_of_fold
-            self.data_structure['data']['train']['context_attributes'] = context_attributes_of_fold
-            self.data_structure['data']['train']['event_ids'] = event_ids_of_fold
-
-        elif mode == 'test':
-            self.data_structure['data']['test']['process_instances'] = process_instances_of_fold
-            self.data_structure['data']['test']['context_attributes'] = context_attributes_of_fold
-            self.data_structure['data']['test']['event_ids'] = event_ids_of_fold
-
-        return process_instances_of_fold, context_attributes_of_fold, event_ids_of_fold
-
-    def get_cropped_instances(self, process_instances, context_attributes_process_instances):
-        """ Crops prefixes out of instances. """
-
-        cropped_process_instances = []
-        cropped_context_attributes = []
-        next_events = []
-
-        if self.data_structure['meta']['num_attributes_context'] > 0:
-
-            for process_instance, context_attributes_process_instance in zip(process_instances,
-                                                                             context_attributes_process_instances):
-                for i in range(0, len(process_instance)):
-
-                    if i == 0:
-                        continue
-
-                    # 0:i -> get 0 up to n-1 events of a process instance, since n is the label
-                    cropped_process_instances.append(process_instance[0:i])
-                    cropped_context_attributes.append(context_attributes_process_instance[0:i])
-                    # label
-                    next_events.append(process_instance[i])
-        else:
-            for process_instance in process_instances:
-                for i in range(0, len(process_instance)):
-
-                    if i == 0:
-                        continue
-                    cropped_process_instances.append(process_instance[0:i])
-                    # label
-                    next_events.append(process_instance[i])
-
-        return cropped_process_instances, cropped_context_attributes, next_events
-
-    def get_cropped_instance(self, prefix_size, index, process_instance):
-        """ Crops prefixes out of a single process instance. """
-
-        cropped_process_instance = process_instance[:prefix_size]
-        if self.data_structure['meta']['num_attributes_context'] > 0:
-            cropped_context_attributes = self.data_structure['data']['test']['context_attributes'][index][:prefix_size]
-        else:
-            cropped_context_attributes = []
-
-        return cropped_process_instance, cropped_context_attributes
-
-    def get_data_tensor(self, cropped_process_instances, cropped_context_attributes_process_instance, mode):
-        """ Produces a vector-oriented representation of data as 3-dimensional tensor. """
-
-        if mode == 'train':
-            data_set = numpy.zeros((
-                len(cropped_process_instances),
-                self.data_structure['meta']['max_length_process_instance'],
-                self.data_structure['encoding']['event_ids']['length'] + self.data_structure['encoding'][
-                    'num_values_context']), dtype=numpy.float64)
-        else:
-            data_set = numpy.zeros((
-                1,
-                self.data_structure['meta']['max_length_process_instance'],
-                self.data_structure['encoding']['event_ids']['length'] + self.data_structure['encoding'][
-                    'num_values_context']), dtype=numpy.float32)
-
-        # ToDo: do not create a single numpy array for all rows of data,
-        #  maybe we can find a workaround for this
-        for index, cropped_process_instance in enumerate(cropped_process_instances):
-
-            left_pad = self.data_structure['meta']['max_length_process_instance'] - len(cropped_process_instance)
-
-            if self.data_structure['meta']['num_attributes_context'] > 0:
-                cropped_context_attributes = cropped_context_attributes_process_instance[index]
-
-            for time_step, event in enumerate(cropped_process_instance):
-                for tuple_idx in range(0, self.data_structure['encoding']['event_ids']['length']):
-                    data_set[index, time_step + left_pad, tuple_idx] = event[tuple_idx]
-
-                if self.data_structure['meta']['num_attributes_context'] > 0:
-                    for context_attribute_index in range(0, self.data_structure['encoding']['num_values_context']):
-                        data_set[index, time_step + left_pad, self.data_structure['encoding']['event_ids'][
-                            'length'] + context_attribute_index] = cropped_context_attributes[time_step][
-                            context_attribute_index]
+                for index_attribute in range(0, number_context_attributes):
+                    data_set[index_instance, time_step * (
+                            number_context_attributes + number_event_attributes) + number_event_attributes + 1 + index_attribute] = \
+                        context_attributes[index_attribute]
 
         return data_set
-
-
-
-    def get_label_tensor(self, cropped_process_instances, next_events):
-        """ Produces a vector-oriented representation of label as 2-dimensional tensor. """
-
-        label = numpy.zeros((len(cropped_process_instances), len(self.data_structure['support']['event_types'])),
-                            dtype=numpy.float64)
-
-        for index, cropped_process_instance in enumerate(cropped_process_instances):
-
-            for event_type in self.data_structure['support']['event_types']:
-
-                if event_type == next_events[index]:
-                    label[index, self.data_structure['support']['map_event_type_to_event_id'][event_type]] = 1
-                else:
-                    label[index, self.data_structure['support']['map_event_type_to_event_id'][event_type]] = 0
-
-        return label
 
 
     def get_2d_data_tensor(self):
@@ -768,7 +639,6 @@ class Preprocessor(object):
         process_instances = self.data_structure['data']['process_instances']
         context_attributes_process_instances = self.data_structure['data']['context_attributes_process_instances']
         number_context_attributes = self.data_structure['encoding']['num_values_context']
-        number_control_flow_attributes = self.data_structure['encoding']['num_values_control_flow'] - 2  # case + time
         number_attributes = self.data_structure['encoding']['num_values_features'] - 2  # case + time
         vector_length = self.data_structure['meta']['max_length_process_instance'] * number_attributes
 
@@ -797,7 +667,7 @@ class Preprocessor(object):
 
                 for index_attribute in range(0, number_context_attributes):
                     data_set[index_instance, time_step * (
-                                number_context_attributes + 1) + number_control_flow_attributes + index_attribute] = \
+                                number_context_attributes + number_event_attributes) + number_event_attributes + 1 + index_attribute] = \
                         context_attributes[index_attribute]
 
         return data_set
@@ -880,6 +750,7 @@ class Preprocessor(object):
         print(plotly.offline.plot(plot_error))
         threshold = df_error['reconstruction_error'].median() + df_error['reconstruction_error'].std()
         no_outliers = df_error.index[df_error['reconstruction_error'] <= threshold].tolist()  # < 0.0005
+        print("Number of outliers: %i" % (len(features_data) - len(no_outliers)))
 
         return no_outliers
 
@@ -1233,3 +1104,12 @@ class Preprocessor(object):
         print(data_set.shape[0])
 
         return data_set, label
+
+    def prepare_event_log_for_prediction(self):
+
+        utils.llprint("Create data set as tensor ... \n")
+        features_data = self.get_2d_data_tensor_prediction()
+
+        return features_data
+
+

@@ -96,9 +96,9 @@ def calculate_and_print_output(label_ground_truth, label_prediction):
     label_prediction = numpy.array(label_prediction)
 
     llprint("Accuracy: %f\n" % sklearn.metrics.accuracy_score(label_ground_truth, label_prediction))
-    llprint("Precision: %f\n" % sklearn.metrics.precision_score(label_ground_truth, label_prediction, average='weighted'))
-    llprint("Recall: %f\n" % sklearn.metrics.recall_score(label_ground_truth, label_prediction, average='weighted'))
-    llprint("F1-score: %f\n" % sklearn.metrics.f1_score(label_ground_truth, label_prediction, average='weighted'))
+    llprint("Precision: %f\n" % sklearn.metrics.precision_score(label_ground_truth, label_prediction, average='macro'))
+    llprint("Recall: %f\n" % sklearn.metrics.recall_score(label_ground_truth, label_prediction, average='macro'))
+    llprint("F1-score: %f\n" % sklearn.metrics.f1_score(label_ground_truth, label_prediction, average='macro'))
     llprint("Auc-roc: %f\n" % multi_class_roc_auc_score(label_ground_truth, label_prediction))
     # we use the average precision at different threshold values as auc of the pr-curve
     # and not the auc-pr-curve with the trapezoidal rule / linear interpolation, because it could be too optimistic
