@@ -33,6 +33,6 @@ if __name__ == '__main__':
 
     # predict
     data_set_pred = preprocessor.prepare_event_log_for_prediction()
-    predictions_ = predictor.apply_wa_classification(args, data_set_test)
+    predictions_ = predictor.apply_wa_classification(args, data_set_pred)
     print(predictor.get_prediction_frequency(predictions_))
 

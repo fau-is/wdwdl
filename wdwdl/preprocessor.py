@@ -609,6 +609,7 @@ class Preprocessor(object):
             vector_length
         ))
 
+
         # fill data
         for index_instance in range(0, len(process_instances)):
             for time_step in range(0, len(process_instances[index_instance]) - 1):  # -1 end marking
@@ -628,7 +629,7 @@ class Preprocessor(object):
 
                 for index_attribute in range(0, number_context_attributes):
                     data_set[index_instance, time_step * (
-                            number_context_attributes + number_event_attributes) + number_event_attributes + 1 + index_attribute] = \
+                            number_context_attributes + number_event_attributes) + number_event_attributes + index_attribute] = \
                         context_attributes[index_attribute]
 
         return data_set
@@ -667,7 +668,7 @@ class Preprocessor(object):
 
                 for index_attribute in range(0, number_context_attributes):
                     data_set[index_instance, time_step * (
-                                number_context_attributes + number_event_attributes) + number_event_attributes + 1 + index_attribute] = \
+                                number_context_attributes + number_event_attributes) + number_event_attributes + index_attribute] = \
                         context_attributes[index_attribute]
 
         return data_set
@@ -1099,9 +1100,6 @@ class Preprocessor(object):
 
         # from sequence to tensor
         data_set = self.get_2d_data_tensor()
-
-        print(len(label))
-        print(data_set.shape[0])
 
         return data_set, label
 
