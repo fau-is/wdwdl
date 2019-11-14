@@ -166,7 +166,7 @@ class Preprocessor(object):
                 if column_index == 1:
                     # event ID
                     if column_data_type == 'num':
-                        # TODO: can integer-mapped events possibly be encoded with onehot, hash, bin?
+
                         column_with_end_mark = self.add_end_mark_to_event_column(column_name)[column_name]
                         self.save_mapping_of_encoded_events(column_with_end_mark, column_with_end_mark)
                         encoded_column = column
@@ -1072,7 +1072,9 @@ class Preprocessor(object):
         # from event-based numpy array to event-based pandas data frame
         data_set_df = pandas.DataFrame(data=data_set[0:, 0:],
                                        index=[i for i in range(data_set.shape[0])],
-                                       columns=['f' + str(i) for i in range(data_set.shape[1])])
+                                       columns=[i for i in eventlog_df.columns])  #  'f' + str(i) for i in range(data_set.shape[1])])
+        for x in eventlog_df.columns:
+            data_set_df[x] = data_set_df[x].astype(eventlog_df[x].dtypes.name)
 
         # reset data structure for encoding
         self.data_structure['encoding']['event_ids'] = {}
@@ -1082,18 +1084,19 @@ class Preprocessor(object):
         # encoding of columns
         data_set_df = self.encode_eventlog(args, data_set_df)
 
-        # update of data structure
-        # num_values_context will be automatically set based on encode_eventlog
-        self.set_number_control_flow_attributes()
-        self.set_number_values_features()
-
         # reset of data structure for get_sequence_from_encoded_eventlog
         self.data_structure['data']['ids_process_instances'] = []
         self.data_structure['data']['process_instances'] = []
         self.data_structure['data']['context_attributes_process_instances'] = []
 
         # from event-based pandas data frame to instance-based
+
         self.get_sequences_from_encoded_eventlog(data_set_df)
+
+        # update of data structure
+        # num_values_context will be automatically set based on encode_eventlog and length of event ids
+        self.set_number_control_flow_attributes()
+        self.set_number_values_features()
 
         # update of data structure for get_2d_data_tensor
         self.set_max_length_process_instance()
