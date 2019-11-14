@@ -9,6 +9,7 @@ import random
 import seaborn as sns
 import pandas
 from functools import reduce
+import os
 
 output = {
     "accuracy_values": [],
@@ -261,3 +262,13 @@ def get_context_for_random_event(event, process_instances, process_instances_con
         if index == 25:
             return -1
         index = index + 1
+
+def delete_encoders():
+    folder = './encoder'
+    for the_file in os.listdir(folder):
+        file_path = os.path.join(folder, the_file)
+        try:
+            if os.path.isfile(file_path):
+                os.unlink(file_path)
+        except Exception as e:
+            print(e)

@@ -11,6 +11,7 @@ import tensorflow as tf
 import keras
 import plotly
 from matplotlib import pyplot as plt
+import pickle
 
 
 class Preprocessor(object):
@@ -90,7 +91,7 @@ class Preprocessor(object):
 
         self.data_structure['encoding']['eventlog_df'] = eventlog_df
 
-        eventlog_df = self.encode_eventlog(args, eventlog_df)
+        eventlog_df = self.encode_eventlog(args, eventlog_df, "init")
         self.set_number_control_flow_attributes()
 
         self.get_sequences_from_encoded_eventlog(eventlog_df)
@@ -149,7 +150,7 @@ class Preprocessor(object):
         else:
             self.set_indices_split_validation(args)
 
-    def encode_eventlog(self, args, eventlog_df):
+    def encode_eventlog(self, args, eventlog_df, logic):
 
         # case
         encoded_eventlog_df = pandas.DataFrame(eventlog_df.iloc[:, 0])
@@ -172,7 +173,7 @@ class Preprocessor(object):
                         encoded_column = column
 
                     elif column_data_type == 'cat':
-                        encoded_column = self.encode_column(args, 'event', column_name, column_data_type)
+                        encoded_column = self.encode_column(args, 'event', column_name, column_data_type, logic)
 
                     if isinstance(encoded_column, pandas.DataFrame):
                         self.set_length_of_event_encoding(len(encoded_column.columns))
@@ -181,7 +182,7 @@ class Preprocessor(object):
 
                 else:
                     # context attribute
-                    encoded_column = self.encode_column(args, 'context', column_name, column_data_type)
+                    encoded_column = self.encode_column(args, 'context', column_name, column_data_type, logic)
 
                 encoded_eventlog_df = encoded_eventlog_df.join(encoded_column)
 
@@ -214,7 +215,7 @@ class Preprocessor(object):
 
         return mode
 
-    def encode_column(self, args, attribute_type, attribute_name, column_data_type):
+    def encode_column(self, args, attribute_type, attribute_name, column_data_type, logic):
 
         mode = self.get_encoding_mode(args, column_data_type)
 
@@ -225,7 +226,10 @@ class Preprocessor(object):
             encoded_column = self.apply_min_max_normalization(attribute_name)
 
         elif mode == 'onehot':
-            encoded_column = self.apply_one_hot_encoding(attribute_type, attribute_name)
+            if logic == "init":
+                encoded_column = self.apply_one_hot_encoding2(attribute_type, attribute_name)
+            else:
+                encoded_column = self.apply_one_hot_encoding_load(attribute_type, attribute_name)
 
         elif mode == 'bin':
             encoded_column = self.apply_binary_encoding(attribute_type, attribute_name)
@@ -273,6 +277,63 @@ class Preprocessor(object):
         self.set_length_of_context_encoding(1)
 
         return encoded_data
+
+    def apply_one_hot_encoding_load(self, attribute_type, column_name):
+        dataframe = self.data_structure['encoding']['eventlog_df']
+
+        if attribute_type == 'event':
+            dataframe = self.add_end_mark_to_event_column(column_name)
+
+        # load encoder
+        pkl_file = open('encoder/%s.pkl' % column_name, 'rb')
+        onehot_encoder = pickle.load(pkl_file)
+        encoded_df = onehot_encoder.transform(dataframe)
+
+        encoded_data = encoded_df[
+            encoded_df.columns[pandas.Series(encoded_df.columns).str.startswith("%s_" % column_name)]]
+
+        if attribute_type == 'event':
+            self.save_mapping_of_encoded_events(dataframe[column_name], encoded_data)
+            encoded_data = self.remove_end_mark_from_event_column(encoded_data)
+
+        elif attribute_type == 'context':
+            if isinstance(encoded_data, pandas.DataFrame):
+                self.set_length_of_context_encoding(len(encoded_data.columns.tolist()))
+            elif isinstance(encoded_data, pandas.Series):
+                self.set_length_of_context_encoding(1)
+
+        return encoded_data
+
+
+    def apply_one_hot_encoding2(self, attribute_type, column_name):
+        dataframe = self.data_structure['encoding']['eventlog_df']
+
+        if attribute_type == 'event':
+            dataframe = self.add_end_mark_to_event_column(column_name)
+
+        onehot_encoder = category_encoders.OneHotEncoder(cols=[column_name])
+        encoded_df = onehot_encoder.fit_transform(dataframe)
+
+        # save encoder
+        output = open('encoder/%s.pkl' % column_name, 'wb')
+        pickle.dump(onehot_encoder, output)
+        output.close()
+
+        encoded_data = encoded_df[
+            encoded_df.columns[pandas.Series(encoded_df.columns).str.startswith("%s_" % column_name)]]
+
+        if attribute_type == 'event':
+            self.save_mapping_of_encoded_events(dataframe[column_name], encoded_data)
+            encoded_data = self.remove_end_mark_from_event_column(encoded_data)
+
+        elif attribute_type == 'context':
+            if isinstance(encoded_data, pandas.DataFrame):
+                self.set_length_of_context_encoding(len(encoded_data.columns.tolist()))
+            elif isinstance(encoded_data, pandas.Series):
+                self.set_length_of_context_encoding(1)
+
+        return encoded_data
+
 
     def apply_one_hot_encoding(self, attribute_type, column_name):
 
@@ -1082,7 +1143,7 @@ class Preprocessor(object):
         self.data_structure['encoding']['eventlog_df'] = data_set_df
 
         # encoding of columns
-        data_set_df = self.encode_eventlog(args, data_set_df)
+        data_set_df = self.encode_eventlog(args, data_set_df, "use")
 
         # reset of data structure for get_sequence_from_encoded_eventlog
         self.data_structure['data']['ids_process_instances'] = []
