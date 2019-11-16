@@ -3,7 +3,11 @@ from keras.models import load_model
 import wdwdl.utils as utils
 
 
-def apply_wa_classification(args, data_set):
+def apply_wa_classification(args, data_set, preprocessor):
+
+    # number_attributes = preprocessor.data_structure['encoding']['num_values_features'] - 2  # case + time
+    # time_steps = preprocessor.data_structure['meta']['max_length_process_instance']
+    # data_set = data_set.reshape((data_set.shape[0], time_steps, number_attributes))
 
     model = load_model('%sclf_wa_mapping.h5' % args.checkpoint_dir)
     predictions = model.predict(data_set)

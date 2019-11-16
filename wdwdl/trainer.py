@@ -2,18 +2,24 @@ from __future__ import print_function, division
 import keras
 
 
-def train_nn_wa_classification(args, data_set, label):
+def train_nn_wa_classification(args, data_set, label, preprocessor):
     """ We use an deep artificial neural network for learning the mapping of process instances and the label. """
 
     """
-    input_layer = keras.layers.Input(shape=(data_set.shape[1], ), name='input_layer')
-    layer_1 = keras.layers.Conv1D(filters=256, kernel_size=3, padding='valid', activation='relu', strides='1')(input_layer)
-    layer_1 = keras.layers.GlobalAveragePooling1D()(layer_1)
-    layer_1 = keras.layers.Dense(250, activation='relu')(layer_1)
-    b1 =  keras.layers.Dropout(0.2)(layer_1)
+    number_attributes = preprocessor.data_structure['encoding']['num_values_features'] - 2  # case + time
+    time_steps = preprocessor.data_structure['meta']['max_length_process_instance']
+
+    data_set = data_set.reshape((data_set.shape[0], time_steps, number_attributes))
+
+    input_layer = keras.layers.Input(shape=(time_steps, number_attributes), name='input_layer')
+    layer_1 = keras.layers.Conv1D(filters=128, kernel_size=2, padding='valid', activation='relu')(input_layer)
+    # layer_1 = keras.layers.GlobalAveragePooling1D(pool_size=2)(layer_1)
+    layer_1 = keras.layers.Flatten()(layer_1)
+    b1 = keras.layers.Dense(100, activation='relu')(layer_1)
+    #b1 = keras.layers.Dropout(0.2)(layer_1)
     """
 
-
+    input_layer = keras.layers.Input(shape=(data_set.shape[1], ), name='input_layer')
     layer_1 = keras.layers.Dense(200, activation='tanh')(input_layer)
     layer_2 = keras.layers.Dropout(0.2)(layer_1)
     layer_2 = keras.layers.Dense(150, activation='tanh')(layer_2)
@@ -22,7 +28,6 @@ def train_nn_wa_classification(args, data_set, label):
     layer_4 = keras.layers.Dropout(0.2)(layer_3)
     layer_4 = keras.layers.Dense(50, activation='tanh')(layer_4)
     b1 = keras.layers.Dropout(0.2)(layer_4)
-    
 
     output = keras.layers.core.Dense(label.shape[1], activation='softmax', name='output',
                                            kernel_initializer='glorot_uniform')(b1)
@@ -33,7 +38,7 @@ def train_nn_wa_classification(args, data_set, label):
     # optimizer = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, amsgrad=False)
 
     model.compile(loss={'output': 'categorical_crossentropy'}, optimizer=optimizer)
-    early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=50)
+    early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=25)
     model_checkpoint = keras.callbacks.ModelCheckpoint('%sclf_wa_mapping.h5' % args.checkpoint_dir,
                                                        monitor='val_loss',
                                                        verbose=0,

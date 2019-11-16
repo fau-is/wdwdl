@@ -311,6 +311,7 @@ class Preprocessor(object):
         if attribute_type == 'event':
             dataframe = self.add_end_mark_to_event_column(column_name)
 
+        # onehot_encoder = category_encoders.OneHotEncoder(cols=[column_name])
         onehot_encoder = category_encoders.BinaryEncoder(cols=[column_name])
         encoded_df = onehot_encoder.fit_transform(dataframe)
 
