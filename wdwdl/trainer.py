@@ -5,7 +5,7 @@ import keras
 def train_nn_wa_classification(args, data_set, label, preprocessor):
     """ We use an deep artificial neural network for learning the mapping of process instances and the label. """
 
-    """
+
     number_attributes = preprocessor.data_structure['encoding']['num_values_features'] - 2  # case + time
     time_steps = preprocessor.data_structure['meta']['max_length_process_instance']
 
@@ -17,8 +17,10 @@ def train_nn_wa_classification(args, data_set, label, preprocessor):
     layer_1 = keras.layers.Flatten()(layer_1)
     b1 = keras.layers.Dense(100, activation='relu')(layer_1)
     #b1 = keras.layers.Dropout(0.2)(layer_1)
-    """
 
+
+
+    """
     input_layer = keras.layers.Input(shape=(data_set.shape[1], ), name='input_layer')
     layer_1 = keras.layers.Dense(200, activation='tanh')(input_layer)
     layer_2 = keras.layers.Dropout(0.2)(layer_1)
@@ -28,6 +30,7 @@ def train_nn_wa_classification(args, data_set, label, preprocessor):
     layer_4 = keras.layers.Dropout(0.2)(layer_3)
     layer_4 = keras.layers.Dense(50, activation='tanh')(layer_4)
     b1 = keras.layers.Dropout(0.2)(layer_4)
+    """
 
     output = keras.layers.core.Dense(label.shape[1], activation='softmax', name='output',
                                            kernel_initializer='glorot_uniform')(b1)

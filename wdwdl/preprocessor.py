@@ -777,17 +777,15 @@ class Preprocessor(object):
 
         # autoencoder
         input_dimension = features_data.shape[1]
-        encoding_dimension = 100
+        encoding_dimension = 128
 
         input_layer = keras.layers.Input(shape=(input_dimension,))
-        encoder = keras.layers.Dense(encoding_dimension, activation='tanh')(input_layer)
-        encoder = keras.layers.Dense(int(encoding_dimension), activation='tanh')(encoder)
+        encoder = keras.layers.Dense(int(encoding_dimension), activation='tanh')(input_layer)
         encoder = keras.layers.Dense(int(encoding_dimension / 2), activation='tanh')(encoder)
         encoder = keras.layers.Dense(int(encoding_dimension / 4), activation='tanh')(encoder)
         decoder = keras.layers.Dense(int(encoding_dimension / 2), activation='tanh')(encoder)
         decoder = keras.layers.Dense(int(encoding_dimension), activation='tanh')(decoder)
-        decoder = keras.layers.Dense(int(encoding_dimension), activation='tanh')(decoder)
-        decoder = keras.layers.Dense(input_dimension, activation='tanh')(decoder)
+        decoder = keras.layers.Dense(input_dimension, activation='sigmoid')(decoder)
 
         autoencoder = keras.models.Model(inputs=input_layer, outputs=decoder)
         autoencoder.summary()
