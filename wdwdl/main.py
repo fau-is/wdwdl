@@ -20,6 +20,8 @@ if __name__ == '__main__':
 
     # split data set
     data_set_train, data_set_test, label_train, label_test = preprocessor.split_validation(data_set, utils.convert_label_to_categorical(label), 0.2)
+    print("Number training instances: %i" % len(data_set_train))
+    print("Number test instances: %i" % len(data_set_test))
 
     # train
     trainer.train_nn_wa_classification(args, data_set_train, label_train, preprocessor)
@@ -32,6 +34,7 @@ if __name__ == '__main__':
 
     # predict
     data_set_pred = preprocessor.prepare_event_log_for_prediction()
+    print("Number prediction instances: %i" % len(data_set_pred))
     predictions_ = predictor.apply_wa_classification(args, data_set_pred, preprocessor)
     print(predictor.get_prediction_frequency(predictions_))
 

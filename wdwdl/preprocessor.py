@@ -809,9 +809,11 @@ class Preprocessor(object):
 
         plot_error = self.plot_reconstruction_error(df_error, 'reconstruction_error')
         print(plotly.offline.plot(plot_error))
-        threshold = df_error['reconstruction_error'].median() + df_error['reconstruction_error'].std()
+        threshold = df_error['reconstruction_error'].median() + (df_error['reconstruction_error'].std())
         no_outliers = df_error.index[df_error['reconstruction_error'] <= threshold].tolist()  # < 0.0005
         print("Number of outliers: %i" % (len(features_data) - len(no_outliers)))
+        print("Number of no outliers: %i" % len(no_outliers))
+
 
         return no_outliers
 

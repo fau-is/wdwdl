@@ -11,16 +11,53 @@ def train_nn_wa_classification(args, data_set, label, preprocessor):
 
     data_set = data_set.reshape((data_set.shape[0], time_steps, number_attributes))
 
+    """
+    # cnn own
     input_layer = keras.layers.Input(shape=(time_steps, number_attributes), name='input_layer')
     layer_1 = keras.layers.Conv1D(filters=128, kernel_size=2, padding='valid', activation='relu')(input_layer)
-    # layer_1 = keras.layers.GlobalAveragePooling1D(pool_size=2)(layer_1)
+    layer_1 = keras.layers.MaxPool1D()(layer_1)
     layer_1 = keras.layers.Flatten()(layer_1)
     b1 = keras.layers.Dense(100, activation='relu')(layer_1)
-    #b1 = keras.layers.Dropout(0.2)(layer_1)
+    # b1 = keras.layers.Dropout(0.2)(layer_1)
+    """
+
+
+    # cnn Abdulrhman et al.
+    input_layer = keras.layers.Input(shape=(time_steps, number_attributes), name='input_layer')
+    layer_1 = keras.layers.Conv1D(filters=128, kernel_size=16, padding='same', strides=1, activation='relu')(input_layer)
+    layer_2 = keras.layers.MaxPool1D()(layer_1)
+    layer_2 = keras.layers.Conv1D(filters=128, kernel_size=16, padding='same', strides=1, activation='relu')(layer_2)
+    layer_3 = keras.layers.MaxPool1D()(layer_2)
+    layer_3 = keras.layers.Conv1D(filters=128, kernel_size=16, padding='same', strides=1, activation='relu')(layer_3)
+    layer_4 = keras.layers.MaxPool1D()(layer_3)
+    layer_4 = keras.layers.Conv1D(filters=128, kernel_size=16, padding='same', strides=1, activation='relu')(layer_4)
+    layer_4 = keras.layers.MaxPool1D()(layer_4)
+    layer_5 = keras.layers.Conv1D(filters=128, kernel_size=16, padding='same', strides=1, activation='relu')(layer_4)
+    layer_5 = keras.layers.MaxPool1D()(layer_5)
+
+    layer_6 = keras.layers.Flatten()(layer_5)
+    b1 = keras.layers.Dense(100, activation='relu')(layer_6)
+    # b1 = keras.layers.Dropout(0.2)(layer_1)
+
+
+
 
 
 
     """
+    # lstm
+    input_layer = keras.layers.Input(shape=(time_steps, number_attributes), name='input_layer')
+    hidden_layer_1 = keras.layers.recurrent.LSTM(100,
+                                                 implementation=2,
+                                                 kernel_initializer='glorot_uniform',  # activation="tanh"
+                                                 return_sequences=False)(input_layer)
+    hidden_layer_1 = keras.layers.Dropout(0.2)(hidden_layer_1)
+    b1 = keras.layers.normalization.BatchNormalization()(hidden_layer_1)
+    """
+
+
+    """
+    # ffnn
     input_layer = keras.layers.Input(shape=(data_set.shape[1], ), name='input_layer')
     layer_1 = keras.layers.Dense(200, activation='tanh')(input_layer)
     layer_2 = keras.layers.Dropout(0.2)(layer_1)

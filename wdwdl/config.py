@@ -28,7 +28,7 @@ def load():
     parser.add_argument('--batch_size_test', default=1, type=int)
 
     # data
-    parser.add_argument('--data_set', default="bpi2012w_converted_selection.csv")  #bpi2012w_converted_sample.csv")
+    parser.add_argument('--data_set', default="bpi2013i_converted_selection.csv")  #bpi2012w_converted_sample.csv")
     parser.add_argument('--data_dir', default="./data/")
     parser.add_argument('--checkpoint_dir', default="./checkpoints/")
     parser.add_argument('--result_dir', default="./results/")
