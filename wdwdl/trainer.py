@@ -8,11 +8,33 @@ def train_nn_wa_classification(args, data_set, label, preprocessor):
 
     number_attributes = preprocessor.data_structure['encoding']['num_values_features'] - 2  # case + time
     time_steps = preprocessor.data_structure['meta']['max_length_process_instance']
-
     data_set = data_set.reshape((data_set.shape[0], time_steps, number_attributes))
 
+
     """
-    # cnn own
+    
+    1.) test: custom feed forward neural network
+    input_layer = keras.layers.Input(shape=(data_set.shape[1], ), name='input_layer')
+    layer_1 = keras.layers.Dense(200, activation='tanh')(input_layer)
+    layer_2 = keras.layers.Dropout(0.2)(layer_1)
+    layer_2 = keras.layers.Dense(150, activation='tanh')(layer_2)
+    layer_3 = keras.layers.Dropout(0.2)(layer_2)
+    layer_3 = keras.layers.Dense(100, activation='tanh')(layer_3)
+    layer_4 = keras.layers.Dropout(0.2)(layer_3)
+    layer_4 = keras.layers.Dense(50, activation='tanh')(layer_4)
+    b1 = keras.layers.Dropout(0.2)(layer_4)
+    
+    2.) test: lstm according to Tax et al. (2017)
+    input_layer = keras.layers.Input(shape=(time_steps, number_attributes), name='input_layer')
+    hidden_layer_1 = keras.layers.recurrent.LSTM(100,
+                                                 implementation=2,
+                                                 kernel_initializer='glorot_uniform',  # activation="tanh"
+                                                 return_sequences=False)(input_layer)
+    hidden_layer_1 = keras.layers.Dropout(0.2)(hidden_layer_1)
+    b1 = keras.layers.normalization.BatchNormalization()(hidden_layer_1)
+    
+    
+    3.) test: custom cnn
     input_layer = keras.layers.Input(shape=(time_steps, number_attributes), name='input_layer')
     layer_1 = keras.layers.Conv1D(filters=128, kernel_size=2, padding='valid', activation='relu')(input_layer)
     layer_1 = keras.layers.MaxPool1D()(layer_1)
@@ -21,8 +43,7 @@ def train_nn_wa_classification(args, data_set, label, preprocessor):
     # b1 = keras.layers.Dropout(0.2)(layer_1)
     """
 
-
-    # cnn Abdulrhman et al.
+    # cnn according to Abdulrhman et al. (2019)
     input_layer = keras.layers.Input(shape=(time_steps, number_attributes), name='input_layer')
     layer_1 = keras.layers.Conv1D(filters=128, kernel_size=16, padding='same', strides=1, activation='relu')(input_layer)
     layer_2 = keras.layers.MaxPool1D()(layer_1)
@@ -34,44 +55,12 @@ def train_nn_wa_classification(args, data_set, label, preprocessor):
     layer_4 = keras.layers.MaxPool1D()(layer_4)
     layer_5 = keras.layers.Conv1D(filters=128, kernel_size=16, padding='same', strides=1, activation='relu')(layer_4)
     layer_5 = keras.layers.MaxPool1D()(layer_5)
-
     layer_6 = keras.layers.Flatten()(layer_5)
     b1 = keras.layers.Dense(100, activation='relu')(layer_6)
-    # b1 = keras.layers.Dropout(0.2)(layer_1)
 
-
-
-
-
-
-    """
-    # lstm
-    input_layer = keras.layers.Input(shape=(time_steps, number_attributes), name='input_layer')
-    hidden_layer_1 = keras.layers.recurrent.LSTM(100,
-                                                 implementation=2,
-                                                 kernel_initializer='glorot_uniform',  # activation="tanh"
-                                                 return_sequences=False)(input_layer)
-    hidden_layer_1 = keras.layers.Dropout(0.2)(hidden_layer_1)
-    b1 = keras.layers.normalization.BatchNormalization()(hidden_layer_1)
-    """
-
-
-    """
-    # ffnn
-    input_layer = keras.layers.Input(shape=(data_set.shape[1], ), name='input_layer')
-    layer_1 = keras.layers.Dense(200, activation='tanh')(input_layer)
-    layer_2 = keras.layers.Dropout(0.2)(layer_1)
-    layer_2 = keras.layers.Dense(150, activation='tanh')(layer_2)
-    layer_3 = keras.layers.Dropout(0.2)(layer_2)
-    layer_3 = keras.layers.Dense(100, activation='tanh')(layer_3)
-    layer_4 = keras.layers.Dropout(0.2)(layer_3)
-    layer_4 = keras.layers.Dense(50, activation='tanh')(layer_4)
-    b1 = keras.layers.Dropout(0.2)(layer_4)
-    """
 
     output = keras.layers.core.Dense(label.shape[1], activation='softmax', name='output',
                                            kernel_initializer='glorot_uniform')(b1)
-
     model = keras.models.Model(inputs=[input_layer], outputs=[output])
 
     optimizer = keras.optimizers.Nadam(lr=args.learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-8, schedule_decay=0.004, clipvalue=3)
