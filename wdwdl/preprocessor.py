@@ -219,23 +219,16 @@ class Preprocessor(object):
 
         mode = self.get_encoding_mode(args, column_data_type)
 
-        if mode == 'int':
-            encoded_column = self.apply_integer_mapping(attribute_type, attribute_name)
 
-        elif mode == 'min_max_norm':
+
+        if mode == 'min_max_norm':
             encoded_column = self.apply_min_max_normalization(attribute_name)
 
-        elif mode == 'onehot':
+        elif mode == 'bin' or mode == 'onehot':
             if logic == "init":
-                encoded_column = self.apply_one_hot_encoding2(attribute_type, attribute_name)
+                encoded_column = self.create_encoder(attribute_type, attribute_name, mode)
             else:
-                encoded_column = self.apply_one_hot_encoding_load(attribute_type, attribute_name)
-
-        elif mode == 'bin':
-            encoded_column = self.apply_binary_encoding(attribute_type, attribute_name)
-
-        elif mode == 'hash':
-            encoded_column = self.apply_hash_encoding(args, attribute_type, attribute_name)
+                encoded_column = self.load_encoder(attribute_type, attribute_name)
 
         else:
             # no encoding
@@ -243,29 +236,6 @@ class Preprocessor(object):
 
         return encoded_column
 
-    def apply_integer_mapping(self, attribute_type, column_name):
-
-        dataframe = self.data_structure['encoding']['eventlog_df']
-
-        if attribute_type == 'event':
-            dataframe = self.add_end_mark_to_event_column(column_name)
-
-        data = dataframe[column_name].fillna("missing")
-        unique_values = data.unique().tolist()
-        int_mapping = dict(zip(unique_values, range(len(unique_values))))
-        encoded_data = data.map(int_mapping)
-
-        if attribute_type == 'event':
-            self.save_mapping_of_encoded_events(data, encoded_data)
-            encoded_data = self.remove_end_mark_from_event_column(encoded_data)
-
-        elif attribute_type == 'context':
-            if isinstance(encoded_data, pandas.DataFrame):
-                self.set_length_of_context_encoding(len(encoded_data.columns.tolist()))
-            elif isinstance(encoded_data, pandas.Series):
-                self.set_length_of_context_encoding(1)
-
-        return encoded_data
 
     def apply_min_max_normalization(self, column_name):
 
@@ -278,16 +248,16 @@ class Preprocessor(object):
 
         return encoded_data
 
-    def apply_one_hot_encoding_load(self, attribute_type, column_name):
+    def load_encoder(self, attribute_type, column_name):
         dataframe = self.data_structure['encoding']['eventlog_df']
 
         if attribute_type == 'event':
             dataframe = self.add_end_mark_to_event_column(column_name)
 
         # load encoder
-        pkl_file = open('encoder/%s.pkl' % column_name, 'rb')
-        onehot_encoder = pickle.load(pkl_file)
-        encoded_df = onehot_encoder.transform(dataframe)
+        pkl_file = open('./encoder/%s.pkl' % column_name, 'rb')
+        encoder = pickle.load(pkl_file)
+        encoded_df = encoder.transform(dataframe)
 
         encoded_data = encoded_df[
             encoded_df.columns[pandas.Series(encoded_df.columns).str.startswith("%s_" % column_name)]]
@@ -305,19 +275,22 @@ class Preprocessor(object):
         return encoded_data
 
 
-    def apply_one_hot_encoding2(self, attribute_type, column_name):
+    def create_encoder(self, attribute_type, column_name, mode):
         dataframe = self.data_structure['encoding']['eventlog_df']
 
         if attribute_type == 'event':
             dataframe = self.add_end_mark_to_event_column(column_name)
 
-        # onehot_encoder = category_encoders.OneHotEncoder(cols=[column_name])
-        onehot_encoder = category_encoders.BinaryEncoder(cols=[column_name])
-        encoded_df = onehot_encoder.fit_transform(dataframe)
+        if mode == 'bin':
+            encoder = category_encoders.BinaryEncoder(cols=[column_name])
+        # onehot
+        else:
+            encoder = category_encoders.OneHotEncoder(cols=[column_name])
+        encoded_df = encoder.fit_transform(dataframe)
 
         # save encoder
         output = open('encoder/%s.pkl' % column_name, 'wb')
-        pickle.dump(onehot_encoder, output)
+        pickle.dump(encoder, output)
         output.close()
 
         encoded_data = encoded_df[
@@ -335,106 +308,6 @@ class Preprocessor(object):
 
         return encoded_data
 
-
-    def apply_one_hot_encoding(self, attribute_type, column_name):
-
-        dataframe = self.data_structure['encoding']['eventlog_df']
-
-        if attribute_type == 'event':
-            dataframe = self.add_end_mark_to_event_column(column_name)
-
-        data = dataframe[column_name]
-        unique_values = data.unique().tolist()
-        encoded_data_row = []
-        encoded_data_rows = []
-
-        for data_row in data:
-
-            for value in unique_values:
-
-                if value == data_row:
-                    encoded_data_row.append(1.0)
-                else:
-                    encoded_data_row.append(0.0)
-
-            encoded_data_rows.append(encoded_data_row)
-            encoded_data_row = []
-
-        encoded_data = pandas.DataFrame(encoded_data_rows)
-
-        new_column_names = []
-        for value in unique_values:
-            new_column_names.append(column_name + "_%s" % value)
-
-        encoded_data = encoded_data.rename(columns=dict(zip(encoded_data.columns.tolist(), new_column_names)))
-
-        if attribute_type == 'event':
-            self.save_mapping_of_encoded_events(data, encoded_data)
-            encoded_data = self.remove_end_mark_from_event_column(encoded_data)
-
-        elif attribute_type == 'context':
-            if isinstance(encoded_data, pandas.DataFrame):
-                self.set_length_of_context_encoding(len(encoded_data.columns.tolist()))
-            elif isinstance(encoded_data, pandas.Series):
-                self.set_length_of_context_encoding(1)
-
-        return encoded_data
-
-    def apply_binary_encoding(self, attribute_type, column_name):
-
-        dataframe = self.data_structure['encoding']['eventlog_df']
-
-        if attribute_type == 'event':
-            dataframe = self.add_end_mark_to_event_column(column_name)
-
-        binary_encoder = category_encoders.BinaryEncoder(cols=[column_name])
-        encoded_df = binary_encoder.fit_transform(dataframe)
-
-        encoded_data = encoded_df[
-            encoded_df.columns[pandas.Series(encoded_df.columns).str.startswith("%s_" % column_name)]]
-
-        if attribute_type == 'event':
-            self.save_mapping_of_encoded_events(dataframe[column_name], encoded_data)
-            encoded_data = self.remove_end_mark_from_event_column(encoded_data)
-
-        elif attribute_type == 'context':
-            if isinstance(encoded_data, pandas.DataFrame):
-                self.set_length_of_context_encoding(len(encoded_data.columns.tolist()))
-            elif isinstance(encoded_data, pandas.Series):
-                self.set_length_of_context_encoding(1)
-
-        return encoded_data
-
-    def apply_hash_encoding(self, args, attribute_type, column_name):
-
-        dataframe = self.data_structure['encoding']['eventlog_df']
-
-        if attribute_type == 'event':
-            dataframe = self.add_end_mark_to_event_column(column_name)
-
-        dataframe[column_name] = dataframe[column_name].fillna("missing")
-        hash_encoder = category_encoders.HashingEncoder(cols=[column_name], n_components=args.num_hash_output)
-        encoded_df = hash_encoder.fit_transform(dataframe)
-
-        encoded_data = encoded_df[encoded_df.columns[pandas.Series(encoded_df.columns).str.startswith('col_')]]
-
-        new_column_names = []
-        for number in range(len(encoded_df.columns)):
-            new_column_names.append(column_name + "_%d" % number)
-
-        encoded_data = encoded_data.rename(columns=dict(zip(encoded_df.columns.tolist(), new_column_names)))
-
-        if attribute_type == 'event':
-            self.save_mapping_of_encoded_events(dataframe[column_name], encoded_data)
-            encoded_data = self.remove_end_mark_from_event_column(encoded_data)
-
-        elif attribute_type == 'context':
-            if isinstance(encoded_data, pandas.DataFrame):
-                self.set_length_of_context_encoding(len(encoded_data.columns.tolist()))
-            elif isinstance(encoded_data, pandas.Series):
-                self.set_length_of_context_encoding(1)
-
-        return encoded_data
 
     def add_end_mark_to_event_column(self, column_name):
 
@@ -792,14 +665,13 @@ class Preprocessor(object):
         autoencoder.compile(optimizer='adam', loss='mse')
 
         history = autoencoder.fit(features_data, features_data,
-                                  epochs=args.dnn_num_epochs_auto,
+                                  epochs=args.dnn_num_epochs_auto_encoder,
                                   batch_size=args.batch_size_train,
                                   shuffle=True,
                                   validation_split=0.1,
                                   )
 
         # df_history = pandas.DataFrame(history.history)
-
         # self.plot_learning_curve(history, learning_epochs)
 
         # remove noise of event log data
@@ -988,10 +860,9 @@ class Preprocessor(object):
         self.data_structure["data"]["process_instances_raw"] = [self.data_structure["data"]["process_instances_raw"][index] for index in range(len(self.data_structure["data"]["process_instances_raw"])) if index in self.data_structure["data"]["ids_process_instances"]]
         self.data_structure["data"]["context_attributes_process_instances_raw"] = [self.data_structure["data"]["context_attributes_process_instances_raw"][index] for index in range(len(self.data_structure["data"]["context_attributes_process_instances_raw"])) if index in self.data_structure["data"]["ids_process_instances"]]
 
-        # raw strctures
+        # raw structures
         process_instances = self.data_structure['data']['process_instances_raw']
         process_instances_context = self.data_structure['data']['context_attributes_process_instances_raw']
-
 
         # get process instance without noise
         process_instances_ = []
@@ -1134,7 +1005,7 @@ class Preprocessor(object):
         # from event-based numpy array to event-based pandas data frame
         data_set_df = pandas.DataFrame(data=data_set[0:, 0:],
                                        index=[i for i in range(data_set.shape[0])],
-                                       columns=[i for i in eventlog_df.columns])  #  'f' + str(i) for i in range(data_set.shape[1])])
+                                       columns=[i for i in eventlog_df.columns])
         for x in eventlog_df.columns:
             data_set_df[x] = data_set_df[x].astype(eventlog_df[x].dtypes.name)
 
