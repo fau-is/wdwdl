@@ -12,19 +12,7 @@ def train_nn_wa_classification(args, data_set, label, preprocessor):
 
 
     """
-    
-    1.) test: custom feed forward neural network
-    input_layer = keras.layers.Input(shape=(data_set.shape[1], ), name='input_layer')
-    layer_1 = keras.layers.Dense(200, activation='tanh')(input_layer)
-    layer_2 = keras.layers.Dropout(0.2)(layer_1)
-    layer_2 = keras.layers.Dense(150, activation='tanh')(layer_2)
-    layer_3 = keras.layers.Dropout(0.2)(layer_2)
-    layer_3 = keras.layers.Dense(100, activation='tanh')(layer_3)
-    layer_4 = keras.layers.Dropout(0.2)(layer_3)
-    layer_4 = keras.layers.Dense(50, activation='tanh')(layer_4)
-    b1 = keras.layers.Dropout(0.2)(layer_4)
-    
-    2.) test: lstm according to Tax et al. (2017)
+    # 1.) test: lstm according to Weinzierl et al. (2020)
     input_layer = keras.layers.Input(shape=(time_steps, number_attributes), name='input_layer')
     hidden_layer_1 = keras.layers.recurrent.LSTM(100,
                                                  implementation=2,
@@ -34,7 +22,44 @@ def train_nn_wa_classification(args, data_set, label, preprocessor):
     b1 = keras.layers.normalization.BatchNormalization()(hidden_layer_1)
     
     
-    3.) test: custom cnn
+    # 2.) test: mlp according to Theis et al. (2019)
+    input_layer = keras.layers.Input(shape=(time_steps, number_attributes), name='input_layer')
+    input_layer_flattened = keras.layers.Flatten()(input_layer)
+
+    # layer 2
+    layer_1 = keras.layers.Dense(300, activation='relu')(input_layer_flattened)
+    layer_1 = keras.layers.normalization.BatchNormalization()(layer_1)
+    layer_1 = keras.layers.Dropout(0.5)(layer_1)
+
+    # layer 3
+    layer_2 = keras.layers.Dense(200, activation='relu')(layer_1)
+    layer_2 = keras.layers.normalization.BatchNormalization()(layer_2)
+    layer_2 = keras.layers.Dropout(0.5)(layer_2)
+
+    # layer 4
+    layer_3 = keras.layers.Dense(100, activation='relu')(layer_2)
+    layer_3 = keras.layers.normalization.BatchNormalization()(layer_3)
+    layer_3 = keras.layers.Dropout(0.5)(layer_3)
+
+    # layer 5
+    layer_4 = keras.layers.Dense(50, activation='relu')(layer_3)
+    layer_4 = keras.layers.normalization.BatchNormalization()(layer_4)
+    b1 = keras.layers.Dropout(0.5)(layer_4)
+
+    
+    # 3.) test: custom mlp
+    input_layer = keras.layers.Input(shape=(data_set.shape[1], ), name='input_layer')
+    layer_1 = keras.layers.Dense(200, activation='tanh')(input_layer)
+    layer_2 = keras.layers.Dropout(0.2)(layer_1)
+    layer_2 = keras.layers.Dense(150, activation='tanh')(layer_2)
+    layer_3 = keras.layers.Dropout(0.2)(layer_2)
+    layer_3 = keras.layers.Dense(100, activation='tanh')(layer_3)
+    layer_4 = keras.layers.Dropout(0.2)(layer_3)
+    layer_4 = keras.layers.Dense(50, activation='tanh')(layer_4)
+    b1 = keras.layers.Dropout(0.2)(layer_4)
+
+    
+    # 4.) test: custom cnn
     input_layer = keras.layers.Input(shape=(time_steps, number_attributes), name='input_layer')
     layer_1 = keras.layers.Conv1D(filters=128, kernel_size=2, padding='valid', activation='relu')(input_layer)
     layer_1 = keras.layers.MaxPool1D()(layer_1)
@@ -42,7 +67,7 @@ def train_nn_wa_classification(args, data_set, label, preprocessor):
     b1 = keras.layers.Dense(100, activation='relu')(layer_1)
     # b1 = keras.layers.Dropout(0.2)(layer_1)
     """
-
+    
     # cnn according to Abdulrhman et al. (2019)
     input_layer = keras.layers.Input(shape=(time_steps, number_attributes), name='input_layer')
     layer_1 = keras.layers.Conv1D(filters=128, kernel_size=16, padding='same', strides=1, activation='relu')(input_layer)
@@ -63,8 +88,8 @@ def train_nn_wa_classification(args, data_set, label, preprocessor):
                                            kernel_initializer='glorot_uniform')(b1)
     model = keras.models.Model(inputs=[input_layer], outputs=[output])
 
-    optimizer = keras.optimizers.Nadam(lr=args.learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-8, schedule_decay=0.004, clipvalue=3)
-    # optimizer = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, amsgrad=False)
+    # optimizer = keras.optimizers.Nadam(lr=args.learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-8, schedule_decay=0.004, clipvalue=3)
+    optimizer = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999)
 
     model.compile(loss={'output': 'categorical_crossentropy'}, optimizer=optimizer)
     early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=25)
