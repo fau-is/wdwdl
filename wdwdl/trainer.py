@@ -10,6 +10,14 @@ def train_nn_wa_classification(args, data_set, label, preprocessor):
     time_steps = preprocessor.data_structure['meta']['max_length_process_instance']
     data_set = data_set.reshape((data_set.shape[0], time_steps, number_attributes))
 
+    # 0.) test: perceptron
+    input_layer = keras.layers.Input(shape=(time_steps, number_attributes), name='input_layer')
+    input_layer_flattened = keras.layers.Flatten()(input_layer)
+
+    layer_1 = keras.layers.Dense(100, activation='tanh')(input_layer_flattened)
+    layer_2 = keras.layers.Dropout(0.2)(layer_1)
+    b1 = keras.layers.Dropout(0.2)(layer_2)
+
 
     """
     # 1.) test: lstm according to Weinzierl et al. (2020)
@@ -66,7 +74,7 @@ def train_nn_wa_classification(args, data_set, label, preprocessor):
     layer_1 = keras.layers.Flatten()(layer_1)
     b1 = keras.layers.Dense(100, activation='relu')(layer_1)
     # b1 = keras.layers.Dropout(0.2)(layer_1)
-    """
+    
     
     # cnn according to Abdulrhman et al. (2019)
     input_layer = keras.layers.Input(shape=(time_steps, number_attributes), name='input_layer')
@@ -82,7 +90,7 @@ def train_nn_wa_classification(args, data_set, label, preprocessor):
     layer_5 = keras.layers.MaxPool1D()(layer_5)
     layer_6 = keras.layers.Flatten()(layer_5)
     b1 = keras.layers.Dense(100, activation='relu')(layer_6)
-
+    """
 
     output = keras.layers.core.Dense(label.shape[1], activation='softmax', name='output',
                                            kernel_initializer='glorot_uniform')(b1)

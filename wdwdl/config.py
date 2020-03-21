@@ -28,7 +28,7 @@ def load():
     parser.add_argument('--split_rate_test', default=0.7, type=float)
 
     # data
-    parser.add_argument('--data_set', default="bpi2019_converted_selection.csv")
+    parser.add_argument('--data_set', default="bpi2013i_converted_selection.csv")
     parser.add_argument('--data_dir', default="./data/")
     parser.add_argument('--checkpoint_dir', default="./checkpoints/")
     parser.add_argument('--result_dir', default="./results/")
