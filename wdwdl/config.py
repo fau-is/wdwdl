@@ -7,7 +7,7 @@ def load():
     parser = argparse.ArgumentParser()
 
     # dnn
-    parser.add_argument('--dnn_num_epochs', default=100, type=int)
+    parser.add_argument('--dnn_num_epochs', default=1, type=int)
     parser.add_argument('--dnn_num_epochs_auto_encoder', default=100, type=int)
     parser.add_argument('--learning_rate', default=0.002, type=float)
 
@@ -27,8 +27,18 @@ def load():
     parser.add_argument('--cross_validation', default=False, type=utils.str2bool)
     parser.add_argument('--split_rate_test', default=0.7, type=float)
 
+    # hyperparameter optimization
+    parser.add_argument('--hpopt', default=True, type=utils.str2bool)
+    parser.add_argument('--hpopt_eval_runs', default=1, type=int)
+    parser.add_argument('--split_rate_test_hpopt', default=0.2, type=float)
+    parser.add_argument('--hpopt_LSTM', default=[50, 100, 150, 200], type=list)
+    parser.add_argument('--hpopt_optimizers', default=['nadam', 'adam', 'sgd', 'rmsprop', 'adadelta', 'adagrad'], type=list)
+    parser.add_argument('--hpopt_activation', default=['tanh', 'linear', 'relu', 'elu'], type=list)
+    parser.add_argument('--hpopt_kernel_initializer', default=['random_normal', 'random_uniform', 'glorot_normal',
+                                                               'glorot_uniform', 'truncated_normal', 'zeros'], type=list)
+
     # data
-    parser.add_argument('--data_set', default="bpi2013i_converted_selection.csv")
+    parser.add_argument('--data_set', default="bpi2012w_converted_sample.csv")
     parser.add_argument('--data_dir', default="./data/")
     parser.add_argument('--checkpoint_dir', default="./checkpoints/")
     parser.add_argument('--result_dir', default="./results/")
