@@ -161,8 +161,8 @@ def create_model(x_train, y_train, x_test, y_test, args):
     lr_reducer = keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=10, verbose=0, mode='auto',
                                                    min_delta=0.0001, cooldown=0, min_lr=0)
     model.summary()
-    model.fit(x_train, {'output': y_train}, validation_split=0.1, verbose=1,
-              callbacks=[early_stopping, lr_reducer], batch_size=args.batch_size_train,
+    model.fit(x_train, {'output': y_train}, verbose=1, callbacks=[early_stopping, lr_reducer],
+              batch_size=args.batch_size_train,
               epochs=args.dnn_num_epochs)
 
     score = model.evaluate(x_test, y_test, verbose=0)
