@@ -29,7 +29,6 @@ def create_data(data_set, label, preprocessor, arguments):
     train_indices, test_indices = train_test_split_for_hyperparameter_optimization(data_set)
     x_train, y_train, x_test, y_test = retrieve_train_test_instances_and_labels(data_set, label, train_indices, test_indices)
 
-    return x_train, y_train, x_test, y_test, args
 
 def train_test_split_for_hyperparameter_optimization(data_set):
     """
@@ -37,7 +36,7 @@ def train_test_split_for_hyperparameter_optimization(data_set):
     test cases of the training set for hpopt.
     """
 
-    shuffle_split = ShuffleSplit(n_splits=1, test_size=args.split_rate_test_hpopt)
+    shuffle_split = ShuffleSplit(n_splits=1, test_size=args.split_rate_test_hpopt, random_state=0)
 
     hpopt_train_indices = []
     hpopt_test_indices = []

@@ -24,17 +24,17 @@ if __name__ == '__main__':
     print("Number test instances: %i" % len(data_set_test))
 
     # train
-    trainer.train_nn_wa_classification(args, data_set_train, label_train, preprocessor)
+    best_model_id = trainer.train_nn_wa_classification(args, data_set_train, label_train, preprocessor)
 
     # test
-    predictions = predictor.apply_wa_classification(args, data_set_test, preprocessor)
+    predictions = predictor.apply_wa_classification(args, data_set_test, preprocessor, best_model_id)
     utils.plot_confusion_matrix2(utils.arg_max(label_test).tolist(), predictions.tolist(), args)
     utils.calculate_and_print_output(utils.arg_max(label_test).tolist(), predictions.tolist())
 
     # predict
     data_set_pred = preprocessor.prepare_event_log_for_prediction()
     print("Number prediction instances: %i" % len(data_set_pred))
-    predictions_ = predictor.apply_wa_classification(args, data_set_pred, preprocessor)
+    predictions_ = predictor.apply_wa_classification(args, data_set_pred, preprocessor, best_model_id)
     print(predictor.get_prediction_frequency(predictions_))
 
     # delete encoders

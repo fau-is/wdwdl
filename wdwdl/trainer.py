@@ -1,78 +1,45 @@
 from __future__ import print_function, division
 import keras
 import wdwdl.hyperparameter_optimization as hpopt
-from hyperopt import Trials, STATUS_OK, rand, tpe
-from hyperas import optim
-from hyperas.distributions import choice, uniform
 import wdwdl.utils as utils
+import optuna
 
 def train_nn_wa_classification(args, data_set, label, preprocessor):
     """ We use an deep artificial neural network for learning the mapping of process instances and the label. """
 
     if args.hpopt:
-        best_model = find_best_model(args, data_set, label, preprocessor)
-        fit_best_model(args, best_model, data_set, label, preprocessor)
+        hpopt.create_data(data_set, label, preprocessor, args)
+
+        sampler = optuna.samplers.TPESampler(seed=10)  # Make the sampler behave in a deterministic way.
+        study = optuna.create_study(direction='maximize', sampler=sampler)
+        study.optimize(find_best_model, n_trials=args.hpopt_eval_runs)
+        print("Number of finished trials: {}".format(len(study.trials)))
+        print("Best trial:")
+        trial = study.best_trial
+        print("  Value: {}".format(trial.value))
+        print("  Params: ")
+        for key, value in trial.params.items():
+            print("    {}: {}".format(key, value))
+
+        return study.best_trial.number
     else:
         train_model(args, data_set, label, preprocessor)
+        return -1
 
 
-def find_best_model(args, data_set, label, preprocessor):
-    """
-    Identifies the best hyperparameter configuration for a model.
-    """
-
-    x_train, y_train, x_test, y_test, _ = hpopt.create_data(data_set, label, preprocessor, args)
-
-    best_run, best_model = optim.minimize(model=create_model,
-                                          data=data,
-                                          algo=tpe.suggest, # rand.suggest,  # tpe or random search
-                                          max_evals=args.hpopt_eval_runs,  # optimization runs
-                                          trials=Trials(),
-                                          eval_space=True, # puts real values into 'best_run'
-                                          verbose=False,
-                                          rseed=1337,
-                                          )
-
-    print("Evaluation of best performing model:")
-    print(best_model.evaluate(x_test, y_test))
-    print(best_model.metrics_names)
-
-    print("Best performing model chosen hyperparameters:")
-    print("################")
-    for (key, value) in best_run.items():
-        print("%s: %s" % (key, value))
-    print("################")
-
-    return best_model
-
-
-def data():
-    """
-    Retrieves input data to train and test/evaluate a model during hyperparameter optimization (hpopt) with hyperas.
-
-    If config.py is used to set hpopt search spaces (e.g. 'hpopt_dropout'), 'args' needs to be passed to create_model()
-    as argument since accessing global variable does not work in this case
-
-    """
-
-    x_train = hpopt.x_train
-    y_train = hpopt.y_train
-
-    x_test = hpopt.x_test
-    y_test = hpopt.y_test
+def find_best_model(trial):
 
     args = hpopt.args
-
-    return x_train, y_train, x_test, y_test, args
-
-
-def create_model(x_train, y_train, x_test, y_test, args):
+    x_train = hpopt.x_train
+    y_train = hpopt.y_train
+    x_test = hpopt.x_test
+    y_test = hpopt.y_test
 
     # 0.) test: perceptron
     input_layer = keras.layers.Input(shape=(hpopt.time_steps, hpopt.number_attributes), name='input_layer')
     input_layer_flattened = keras.layers.Flatten()(input_layer)
 
-    layer_1 = keras.layers.Dense(100, activation='tanh')(input_layer_flattened)
+    layer_1 = keras.layers.Dense(100, activation=trial.suggest_categorical("activation", args.hpopt_activation))(input_layer_flattened)
     layer_2 = keras.layers.Dropout(0.2)(layer_1)
     b1 = keras.layers.Dropout(0.2)(layer_2)
 
@@ -149,7 +116,7 @@ def create_model(x_train, y_train, x_test, y_test, args):
     b1 = keras.layers.Dense(100, activation='relu')(layer_6)
     """
 
-    output = keras.layers.core.Dense(y_train.shape[1], activation={{choice(args.hpopt_activation)}}, name='output',
+    output = keras.layers.core.Dense(y_train.shape[1], activation=trial.suggest_categorical('activation', args.hpopt_activation), name='output',
                                      kernel_initializer='glorot_uniform')(b1)
     model = keras.models.Model(inputs=[input_layer], outputs=[output])
 
@@ -158,38 +125,21 @@ def create_model(x_train, y_train, x_test, y_test, args):
 
     model.compile(loss={'output': 'categorical_crossentropy'}, optimizer=optimizer, metrics=['accuracy', utils.f1_score])
     early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=25)
-    lr_reducer = keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=10, verbose=0, mode='auto',
-                                                   min_delta=0.0001, cooldown=0, min_lr=0)
-    model.summary()
-    model.fit(x_train, {'output': y_train}, validation_split=0.1, verbose=1,
-              callbacks=[early_stopping, lr_reducer], batch_size=args.batch_size_train,
-              epochs=args.dnn_num_epochs)
-
-    score = model.evaluate(x_test, y_test, verbose=0)
-    f1_score = score[2]
-
-    return {'loss': -f1_score, 'status': STATUS_OK, 'model': model}
-
-
-def fit_best_model(args, model, data_set, label, preprocessor):
-
-    number_attributes = preprocessor.data_structure['encoding']['num_values_features'] - 2  # case + time
-    time_steps = preprocessor.data_structure['meta']['max_length_process_instance']
-    data_set = data_set.reshape((data_set.shape[0], time_steps, number_attributes))
-
-    early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=25)
-    model_checkpoint = keras.callbacks.ModelCheckpoint('%sclf_wa_mapping.h5' % args.checkpoint_dir,
+    model_checkpoint = keras.callbacks.ModelCheckpoint('%sclf_wa_mapping_trial%s.h5' % (args.checkpoint_dir, trial.number),
                                                        monitor='val_loss',
                                                        verbose=0,
-                                                       save_best_only=True,
+                                                       # save_best_only=True,
                                                        save_weights_only=False,
                                                        mode='auto')
     lr_reducer = keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=10, verbose=0, mode='auto',
                                                    min_delta=0.0001, cooldown=0, min_lr=0)
     model.summary()
-    model.fit(data_set, {'output': label}, validation_split=0.1, verbose=1,
+    model.fit(x_train, {'output': y_train}, validation_split=0.1, verbose=1,
               callbacks=[early_stopping, model_checkpoint, lr_reducer], batch_size=args.batch_size_train,
               epochs=args.dnn_num_epochs)
+
+    score = model.evaluate(x_test, y_test, verbose=0)
+    return score[1]
 
 
 def train_model(args, data_set, label, preprocessor):

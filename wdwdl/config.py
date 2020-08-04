@@ -29,7 +29,7 @@ def load():
 
     # hyperparameter optimization
     parser.add_argument('--hpopt', default=True, type=utils.str2bool)
-    parser.add_argument('--hpopt_eval_runs', default=1, type=int)
+    parser.add_argument('--hpopt_eval_runs', default=2, type=int)
     parser.add_argument('--split_rate_test_hpopt', default=0.2, type=float)
     parser.add_argument('--hpopt_LSTM', default=[50, 100, 150, 200], type=list)
     parser.add_argument('--hpopt_optimizers', default=['nadam', 'adam', 'sgd', 'rmsprop', 'adadelta', 'adagrad'], type=list)
@@ -38,7 +38,7 @@ def load():
                                                                'glorot_uniform', 'truncated_normal', 'zeros'], type=list)
 
     # data
-    parser.add_argument('--data_set', default="bpi2012w_converted_sample.csv")
+    parser.add_argument('--data_set', default="bpi2013i_converted_selection.csv")
     parser.add_argument('--data_dir', default="./data/")
     parser.add_argument('--checkpoint_dir', default="./checkpoints/")
     parser.add_argument('--result_dir', default="./results/")
