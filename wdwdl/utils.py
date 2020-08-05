@@ -3,7 +3,6 @@ import pickle
 import sys
 import numpy
 import sklearn
-import keras
 import matplotlib.pyplot as pyplot
 import random
 import seaborn as sns
@@ -11,6 +10,7 @@ import pandas
 from functools import reduce
 import os
 import tensorflow.keras.backend as K
+import tensorflow as tf
 
 output = {
     "accuracy_values": [],
@@ -44,7 +44,7 @@ def arg_max(list_):
 
 
 def convert_label_to_categorical(label):
-    return keras.utils.np_utils.to_categorical(label)
+    return tf.keras.utils.to_categorical(label)
 
 
 def load(path):
@@ -150,6 +150,7 @@ def plot_confusion_matrix2(label_ground_truth, label_prediction, args):
 
     print(label_prediction)
     print(label_ground_truth)
+
 
 def plot_confusion_matrix(label_ground_truth, label_prediction,
                           normalize=False,
@@ -263,6 +264,7 @@ def get_context_for_random_event(event, process_instances, process_instances_con
         if index == 25:
             return -1
         index = index + 1
+
 
 def delete_encoders():
     folder = './encoder'

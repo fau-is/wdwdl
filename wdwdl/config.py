@@ -11,9 +11,9 @@ def load():
     parser.add_argument('--dnn_num_epochs_auto_encoder', default=100, type=int)
     parser.add_argument('--learning_rate', default=0.002, type=float)
 
-    # pre-processing: min_max_norm, bin or onehot
+    # pre-processing: min_max_norm, bin or one-hot
     parser.add_argument('--encoding_num', default="min_max_norm", type=str)  # for numerical attributes
-    # note: onehot encoding of the categorical attributes can lead to memory errors
+    # note: one-hot encoding of the categorical attributes can lead to memory errors
     parser.add_argument('--encoding_cat', default="bin", type=str)  # for categorical attributes
 
     # all models

@@ -1,6 +1,6 @@
 from __future__ import division
-from keras.models import load_model
 import wdwdl.utils as utils
+import tensorflow as tf
 
 
 def apply_wa_classification(args, data_set, preprocessor, best_model_id):

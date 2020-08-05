@@ -8,7 +8,6 @@ import wdwdl.utils as utils
 import sklearn
 from sklearn.model_selection import KFold, ShuffleSplit
 import tensorflow as tf
-import keras
 import plotly
 from matplotlib import pyplot as plt
 import pickle
@@ -652,15 +651,15 @@ class Preprocessor(object):
         input_dimension = features_data.shape[1]
         encoding_dimension = 128
 
-        input_layer = keras.layers.Input(shape=(input_dimension,))
-        encoder = keras.layers.Dense(int(encoding_dimension), activation='tanh')(input_layer)
-        encoder = keras.layers.Dense(int(encoding_dimension / 2), activation='tanh')(encoder)
-        encoder = keras.layers.Dense(int(encoding_dimension / 4), activation='tanh')(encoder)
-        decoder = keras.layers.Dense(int(encoding_dimension / 2), activation='tanh')(encoder)
-        decoder = keras.layers.Dense(int(encoding_dimension), activation='tanh')(decoder)
-        decoder = keras.layers.Dense(input_dimension, activation='sigmoid')(decoder)
+        input_layer = tf.keras.layers.Input(shape=(input_dimension,))
+        encoder = tf.keras.layers.Dense(int(encoding_dimension), activation='tanh')(input_layer)
+        encoder = tf.keras.layers.Dense(int(encoding_dimension / 2), activation='tanh')(encoder)
+        encoder = tf.keras.layers.Dense(int(encoding_dimension / 4), activation='tanh')(encoder)
+        decoder = tf.keras.layers.Dense(int(encoding_dimension / 2), activation='tanh')(encoder)
+        decoder = tf.keras.layers.Dense(int(encoding_dimension), activation='tanh')(decoder)
+        decoder = tf.keras.layers.Dense(input_dimension, activation='sigmoid')(decoder)
 
-        autoencoder = keras.models.Model(inputs=input_layer, outputs=decoder)
+        autoencoder = tf.keras.models.Model(inputs=input_layer, outputs=decoder)
         autoencoder.summary()
         autoencoder.compile(optimizer='adam', loss='mse')
 

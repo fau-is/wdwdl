@@ -7,4 +7,5 @@ jellyfish
 numpy
 scikit-learn
 keras
-tensorflow
+tensorflow==2.2.0
+optuna
