@@ -1,6 +1,6 @@
 from __future__ import division
 import wdwdl.utils as utils
-import tensorflow as tf
+from tensorflow.keras.models import load_model
 
 
 def apply_wa_classification(args, data_set, preprocessor, best_model_id):
@@ -12,9 +12,10 @@ def apply_wa_classification(args, data_set, preprocessor, best_model_id):
     if args.hpopt:
         model_name = '%sclf_wa_mapping_trial%s.h5' % (args.checkpoint_dir, best_model_id)
     else:
-        model_name = '%sclf_wa_mapping.h5' % (args.checkpoint_dir)
+        model_name = '%sclf_wa_mapping.h5' % args.checkpoint_dir
 
-    model = load_model(model_name, custom_objects={'f1_score': utils.f1_score})
+    model = load_model(model_name,
+                       custom_objects={'f1_score': utils.f1_score})
     predictions = model.predict(data_set)
 
     return utils.arg_max(predictions)

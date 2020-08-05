@@ -131,6 +131,7 @@ class Preprocessor(object):
         self.data_structure['encoding']['num_values_features'] = self.data_structure['encoding'][
                                                                      'num_values_control_flow'] + \
                                                                  self.data_structure['encoding']['num_values_context']
+
     def set_number_control_flow_attributes(self):
         # + 2 -> case + time
         self.data_structure['encoding']['num_values_control_flow'] = \
@@ -191,6 +192,7 @@ class Preprocessor(object):
         encoded_eventlog_df.to_csv(self.data_structure['support']['encoded_data_dir'], sep=';', index=False)
 
         return encoded_eventlog_df
+
 
     def get_attribute_data_type(self, attribute_column):
 
@@ -449,10 +451,11 @@ class Preprocessor(object):
             self.add_data_to_data_structure(context_attributes_process_instance, 'context_attributes_process_instances')
         self.data_structure['meta']['num_process_instances'] += 1
 
-        # pick out process instances for validation; only at the beginning
+        # first, filter out process instances for prediction
         if self.data_structure["meta"]["flag_pred_split"]:
             ids_data_set, ids_pred_set, _, _ = \
                 self.split_validation(self.data_structure["data"]["ids_process_instances"], self.data_structure["data"]["ids_process_instances"], 0.1)
+
             # get data for pred set
             self.data_structure["data"]["predict"]["process_instances"] = [self.data_structure["data"]["process_instances"][index] for index in range(len(self.data_structure["data"]["process_instances"])) if index in ids_pred_set]
             self.data_structure["data"]["predict"]["context_attributes"] = [self.data_structure["data"]["context_attributes_process_instances"][index] for index in range(len(self.data_structure["data"]["context_attributes_process_instances"])) if index in ids_pred_set]
@@ -685,7 +688,6 @@ class Preprocessor(object):
         print("Number of outliers: %i" % (len(features_data) - len(no_outliers)))
         print("Number of no outliers: %i" % len(no_outliers))
 
-
         return no_outliers
 
     def workaround_injured_responsiblity(self, process_instance, context, unique_context, max_injures=1):
@@ -851,6 +853,7 @@ class Preprocessor(object):
 
 
     def add_workarounds_to_event_log(self, args, no_outliers):
+
         # get process instances
         eventlog_df = self.data_structure['encoding']['eventlog_df']
         self.get_sequences_from_raw_eventlog(eventlog_df)
@@ -1022,7 +1025,6 @@ class Preprocessor(object):
         self.data_structure['data']['context_attributes_process_instances'] = []
 
         # from event-based pandas data frame to instance-based
-
         self.get_sequences_from_encoded_eventlog(data_set_df)
 
         # update of data structure
