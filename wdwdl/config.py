@@ -30,16 +30,21 @@ def load():
 
     # Hyper-parameter optimization
     parser.add_argument('--hpopt', default=True, type=utils.str2bool)
-    parser.add_argument('--hpopt_eval_runs', default=5, type=int)
-    parser.add_argument('--split_rate_test_hpopt', default=0.2, type=float)
-    parser.add_argument('--hpopt_LSTM', default=[50, 100, 150, 200], type=list)
+    parser.add_argument('--hpopt_eval_runs', default=1, type=int)
+    parser.add_argument('--split_rate_test_hpopt', default=0.1, type=float)  # size of validation set in hpo
+
     # parser.add_argument('--hpopt_optimizers', default=['nadam', 'adam', 'sgd', 'rmsprop', 'adadelta', 'adagrad'], type=list)
     parser.add_argument('--hpopt_optimizers', default=['nadam', 'adam', 'rmsprop'],
                         type=list)
     parser.add_argument('--hpopt_activation', default=['linear', 'tanh', 'relu', 'elu'], type=list)
-    parser.add_argument('--hpopt_kernel_initializer', default=['random_normal', 'random_uniform', 'glorot_normal',
-                                                               'glorot_uniform', 'truncated_normal', 'zeros'], type=list)
-
+    parser.add_argument('--hpopt_filters', default=[256, 128, 64, 32], type=list)
+    parser.add_argument('--hpopt_kernels_size', default=[64, 32, 16, 8], type=list)
+    # Stride = moving distance of filter in pixels/positions to right, often used values are 1 or 2
+    # We want to grasp all potential workarounds in event log data, thus we set stride = 1
+    parser.add_argument('--hpopt_strides', default=[1], type=list)
+    parser.add_argument('--hpopt_padding', default=["valid", "same", "causal"], type=list)
+    parser.add_argument('--hpopt_kernel_initializer', default=['glorot_normal', 'glorot_uniform'], type=list)
+    parser.add_argument('--hpopt_units', default=[25, 50, 100, 150], type=list)
 
     # Gpu processing
     parser.add_argument('--gpu_ratio', default=1.0, type=float)

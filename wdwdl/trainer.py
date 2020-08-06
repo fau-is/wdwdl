@@ -92,7 +92,6 @@ def find_best_model(trial):
     layer_4 = tf.keras.layers.Dense(50, activation='tanh')(layer_4)
     b1 = tf.keras.layers.Dropout(0.2)(layer_4)
 
-
     # 4.) test: custom cnn
     input_layer = tf.keras.layers.Input(shape=(time_steps, number_attributes), name='input_layer')
     layer_1 = tf.keras.layers.Conv1D(filters=128, kernel_size=2, padding='valid', activation='relu')(input_layer)
@@ -102,51 +101,78 @@ def find_best_model(trial):
     # b1 = tf.keras.layers.Dropout(0.2)(layer_1)
     """
 
-    # cnn according to Abdulrhman et al. (2019)
-    input_layer = tf.keras.layers.Input(shape=(hpopt.time_steps, hpopt.number_attributes), name='input_layer')
-    layer_1 = tf.keras.layers.Conv1D(filters=128,
-                                     kernel_size=16,
-                                     padding='same',
-                                     strides=1,
-                                     activation=trial.suggest_categorical('activation', args.hpopt_activation))(input_layer)
-    layer_2 = tf.keras.layers.MaxPool1D()(layer_1)
-    layer_2 = tf.keras.layers.Conv1D(filters=128,
-                                     kernel_size=16,
-                                     padding='same',
-                                     strides=1,
-                                     activation=trial.suggest_categorical('activation', args.hpopt_activation))(layer_2)
-    layer_3 = tf.keras.layers.MaxPool1D()(layer_2)
-    layer_3 = tf.keras.layers.Conv1D(filters=128,
-                                     kernel_size=16,
-                                     padding='same',
-                                     strides=1,
-                                     activation=trial.suggest_categorical('activation', args.hpopt_activation))(layer_3)
-    layer_4 = tf.keras.layers.MaxPool1D()(layer_3)
-    layer_4 = tf.keras.layers.Conv1D(filters=128,
-                                     kernel_size=16,
-                                     padding='same',
-                                     strides=1,
-                                     activation=trial.suggest_categorical('activation', args.hpopt_activation))(layer_4)
-    layer_4 = tf.keras.layers.MaxPool1D()(layer_4)
-    layer_5 = tf.keras.layers.Conv1D(filters=128,
-                                     kernel_size=16,
-                                     padding='same',
-                                     strides=1,
-                                     activation='relu')(layer_4)
-    layer_5 = tf.keras.layers.MaxPool1D()(layer_5)
-    layer_6 = tf.keras.layers.Flatten()(layer_5)
-    b1 = tf.keras.layers.Dense(100, activation='relu')(layer_6)
+    # CNN motivated by the work of Abdulrhman et al. (2019)
+    input_layer = tf.keras.layers.Input(shape=(hpopt.time_steps, hpopt.number_attributes),
+                                        name='input_layer')
 
+    # Hidden layer one
+    layer = tf.keras.layers.Conv1D(filters=trial.suggest_categorical('filters_1', args.hpopt_filters),
+                                   kernel_size=trial.suggest_categorical('kernel_size_1', args.hpopt_kernels_size),
+                                   padding=trial.suggest_categorical('padding_1', args.hpopt_padding),
+                                   activation=trial.suggest_categorical('activation_1', args.hpopt_activation),
+                                   kernel_initializer=trial.suggest_categorical('kernel_initializer_1',
+                                                                                args.hpopt_kernel_initializer),
+                                   )(input_layer)
+
+    # Hidden layer two
+    layer = tf.keras.layers.MaxPool1D()(layer)
+    layer = tf.keras.layers.Conv1D(filters=trial.suggest_categorical('filters_2', args.hpopt_filters),
+                                   kernel_size=trial.suggest_categorical('kernel_size_2', args.hpopt_kernels_size),
+                                   padding=trial.suggest_categorical('padding_2', args.hpopt_padding),
+                                   activation=trial.suggest_categorical('activation_2', args.hpopt_activation),
+                                   kernel_initializer=trial.suggest_categorical('kernel_initializer_2',
+                                                                                args.hpopt_kernel_initializer),
+                                   )(layer)
+
+    # Hidden layer three
+    layer = tf.keras.layers.MaxPool1D()(layer)
+    layer = tf.keras.layers.Conv1D(filters=trial.suggest_categorical('filters_3', args.hpopt_filters),
+                                   kernel_size=trial.suggest_categorical('kernel_size_3', args.hpopt_kernels_size),
+                                   padding=trial.suggest_categorical('padding_3', args.hpopt_padding),
+                                   activation=trial.suggest_categorical('activation_3', args.hpopt_activation),
+                                   kernel_initializer=trial.suggest_categorical('kernel_initializer_3',
+                                                                                args.hpopt_kernel_initializer),
+                                   )(layer)
+
+    # Hidden layer four
+    layer = tf.keras.layers.MaxPool1D()(layer)
+    layer = tf.keras.layers.Conv1D(filters=trial.suggest_categorical('filters_4', args.hpopt_filters),
+                                   kernel_size=trial.suggest_categorical('kernel_size_4', args.hpopt_kernels_size),
+                                   padding=trial.suggest_categorical('padding_4', args.hpopt_padding),
+                                   activation=trial.suggest_categorical('activation_4', args.hpopt_activation),
+                                   kernel_initializer=trial.suggest_categorical('kernel_initializer_4',
+                                                                                args.hpopt_kernel_initializer),
+                                   )(layer)
+
+    # Hidden layer five
+    layer = tf.keras.layers.MaxPool1D()(layer)
+    layer = tf.keras.layers.Conv1D(filters=trial.suggest_categorical('filters_5', args.hpopt_filters),
+                                   kernel_size=trial.suggest_categorical('kernel_size_5', args.hpopt_kernels_size),
+                                   padding=trial.suggest_categorical('padding_5', args.hpopt_padding),
+                                   activation=trial.suggest_categorical('activation_5', args.hpopt_activation),
+                                   kernel_initializer=trial.suggest_categorical('kernel_initializer_5',
+                                                                                args.hpopt_kernel_initializer),
+                                   )(layer)
+
+    # Hidden layer six
+    layer = tf.keras.layers.MaxPool1D()(layer)
+    layer = tf.keras.layers.Flatten()(layer)
+
+    # Hidden layer seven
+    b1 = tf.keras.layers.Dense(trial.suggest_categorical('units_7', args.hpopt_units),
+                               kernel_initializer=trial.suggest_categorical('kernel_initializer_7',
+                                                                            args.hpopt_kernel_initializer),
+                               activation=trial.suggest_categorical('activation_7', args.hpopt_activation)
+
+                               )(layer)
 
     output = tf.keras.layers.Dense(y_train.shape[1],
                                    activation='softmax',
                                    name='output',
-                                   kernel_initializer='glorot_uniform')(b1)
+                                   kernel_initializer=trial.suggest_categorical(
+                                       'kernel_initializer_7', args.hpopt_kernel_initializer))(b1)
+
     model = tf.keras.models.Model(inputs=[input_layer], outputs=[output])
-
-
-    # optimizer = tf.keras.optimizers.Nadam(lr=args.learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-8, schedule_decay=0.004, clipvalue=3)
-    # optimizer = tf.keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999)
 
     model.compile(loss={'output': 'categorical_crossentropy'}, optimizer='adam',
                   metrics=['accuracy', utils.f1_score])
@@ -155,7 +181,7 @@ def find_best_model(trial):
         '%sclf_wa_mapping_trial%s.h5' % (args.checkpoint_dir, trial.number),
         monitor='val_loss',
         verbose=0,
-        save_weights_only=False,   # save_best_only=True,
+        save_weights_only=False,  # save_best_only=True,
         mode='auto')
     lr_reducer = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=10, verbose=0,
                                                       mode='auto',
