@@ -2,10 +2,9 @@ matplotlib
 pandas
 arrow
 nltk
-distance
-jellyfish
 numpy
 scikit-learn
-keras
-tensorflow==2.2.0
+tensorflow==2.3.0
 optuna
+seaborn
+plotly
