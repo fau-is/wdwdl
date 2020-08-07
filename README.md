@@ -18,9 +18,9 @@
 5. -
 
 ## Paper
-This repository contains the implementation of the work from XY.
+This repository contains the implementation of [Weinzierl et al. (2020)](https://arxiv.org/). A previous version of this method was presented in:
 
-A previous version of this method was presented in:
+
 ```
 @proceedings{weinzierl2020wdwdl,
     title={Detecting Workarounds in Business Processes -- a Deep Learning method for Analyzing Event Logs},
