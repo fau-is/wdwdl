@@ -183,6 +183,7 @@ def find_best_model(trial):
         verbose=0,
         save_weights_only=False,  # save_best_only=True,
         mode='auto')
+
     lr_reducer = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=10, verbose=0,
                                                       mode='auto',
                                                       min_delta=0.0001, cooldown=0, min_lr=0)
@@ -192,7 +193,9 @@ def find_best_model(trial):
               epochs=args.dnn_num_epochs)
 
     score = model.evaluate(x_test, y_test, verbose=0)
-    return score[1]
+    print(0)
+    #
+    return score[2]
 
 
 def train_model(args, data_set, label, preprocessor):

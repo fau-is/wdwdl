@@ -7,7 +7,7 @@ def load():
     parser = argparse.ArgumentParser()
 
     # Data and pre-processing
-    parser.add_argument('--data_set', default="bpi2019_converted_selection.csv")
+    parser.add_argument('--data_set', default="bpi2012w_converted_selection.csv")
     parser.add_argument('--data_dir', default="./data/")
     parser.add_argument('--checkpoint_dir', default="./checkpoints/")
     parser.add_argument('--result_dir', default="./results/")
@@ -17,8 +17,8 @@ def load():
 
     # Training
     parser.add_argument('--task', default="workaround_detection")
-    parser.add_argument('--dnn_num_epochs', default=5, type=int)
-    parser.add_argument('--dnn_num_epochs_auto_encoder', default=100, type=int)
+    parser.add_argument('--dnn_num_epochs', default=1, type=int)
+    parser.add_argument('--dnn_num_epochs_auto_encoder', default=1, type=int)
     parser.add_argument('--batch_size_train', default=128, type=int)
     parser.add_argument('--batch_size_test', default=1, type=int)
 
@@ -30,12 +30,11 @@ def load():
 
     # Hyper-parameter optimization
     parser.add_argument('--hpopt', default=True, type=utils.str2bool)
-    parser.add_argument('--hpopt_eval_runs', default=10, type=int)
+    parser.add_argument('--hpopt_eval_runs', default=1, type=int)
     parser.add_argument('--split_rate_test_hpopt', default=0.1, type=float)  # size of validation set in hpo
 
     # parser.add_argument('--hpopt_optimizers', default=['nadam', 'adam', 'sgd', 'rmsprop', 'adadelta', 'adagrad'], type=list)
-    parser.add_argument('--hpopt_optimizers', default=['nadam', 'adam', 'rmsprop'],
-                        type=list)
+    parser.add_argument('--hpopt_optimizers', default=['nadam', 'adam', 'rmsprop'], type=list)
     parser.add_argument('--hpopt_activation', default=['linear', 'tanh', 'relu', 'elu'], type=list)
     parser.add_argument('--hpopt_filters', default=[128, 64, 32], type=list)
     parser.add_argument('--hpopt_kernels_size', default=[32, 16, 8], type=list)

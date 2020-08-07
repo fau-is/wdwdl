@@ -9,6 +9,9 @@ if __name__ == '__main__':
 
     args = config.load()
 
+    # Delete encoders from previous experiments
+    utils.delete_encoders()
+
     # Init preprocessor
     preprocessor = Preprocessor(args)
 
