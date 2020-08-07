@@ -1,12 +1,20 @@
 from __future__ import print_function, division
 import wdwdl.hyperparameter_optimization as hpopt
-import wdwdl.src.utils.general as utils
+import wdwdl.src.utils.metric as metric
 import optuna
 import tensorflow as tf
 
 
 def train_nn_wa_classification(args, data_set, label, preprocessor):
-    """ We use an deep artificial neural network for learning the mapping of process instances and labels. """
+    """
+    We use an deep artificial neural network for learning the mapping of process instances and labels.
+    :param args:
+    :param data_set:
+    :param label:
+    :param preprocessor:
+    :return:
+    """
+
 
     if args.hpopt:
         hpopt.create_data(data_set, label, preprocessor, args)
@@ -175,7 +183,7 @@ def find_best_model(trial):
     model = tf.keras.models.Model(inputs=[input_layer], outputs=[output])
 
     model.compile(loss={'output': 'categorical_crossentropy'}, optimizer='adam',
-                  metrics=['accuracy', utils.f1_score])
+                  metrics=['accuracy', metric.f1_score])
     early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=25)
     model_checkpoint = tf.keras.callbacks.ModelCheckpoint(
         '%sclf_wa_mapping_trial%s.h5' % (args.checkpoint_dir, trial.number),

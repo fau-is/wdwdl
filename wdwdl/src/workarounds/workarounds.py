@@ -1,5 +1,5 @@
 import numpy as np
-import utils as utils
+import wdwdl.src.workarounds.utils as utils
 
 
 def substituted_activity(process_instance, context, unique_events, process_instances,
@@ -30,7 +30,7 @@ def substituted_activity(process_instance, context, unique_events, process_insta
         if the new event is not included in 25 randomly selected process instances, 
         than set the default value 0 for each context attribute
         """
-        context_new = utils.get_context_for_random_event(event_new, process_instances, process_instances_context)
+        context_new = utils.context_for_random_event(event_new, process_instances, process_instances_context)
         if context_new == -1:
             context_new = [0] * num_context_attr
 
@@ -191,7 +191,7 @@ def added_activity(process_instance, context, unique_events, process_instances, 
         if the new event is not included in 25 randomly selected process instances, 
         than set the default value 0 for each context attribute
         """
-        context_new = utils.get_context_for_random_event(event_new, process_instances, process_instances_context)
+        context_new = utils.context_for_random_event(event_new, process_instances, process_instances_context)
         if context_new == -1:
             context_new = [0] * num_context_attr
 

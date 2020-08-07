@@ -8,7 +8,9 @@ import wdwdl.src.utils.general as general
 import tensorflow as tf
 import pickle
 import wdwdl.src.workarounds.workarounds as wa
+import wdwdl.src.preprocessing.utils as utils
 import plotly
+
 
 
 def get_context_attributes_of_event(event):
@@ -651,25 +653,10 @@ class Preprocessor(object):
         print(plotly.offline.plot(plot_error))
         threshold = df_error['reconstruction_error'].median() + (df_error['reconstruction_error'].std())
         no_outliers = df_error.index[df_error['reconstruction_error'] <= threshold].tolist()  # < 0.0005
-        print("Number of outliers: %i" % (len(features_data) - len(no_outliers)))
-        print("Number of no outliers: %i" % len(no_outliers))
+        general.llprint("Number of outliers: %i\n" % (len(features_data) - len(no_outliers)))
+        general.llprint("Number of no outliers: %i\n" % len(no_outliers))
 
         return no_outliers
-
-    def workaround_injured_responsiblity(self, process_instance, context, unique_context, max_injures=1):
-        """
-        Change the value of the resource attribute.
-        The resource attribute is the first context attribute.
-        """
-
-        unique_resource = unique_context[0]
-
-        for index in range(0, max_injures):
-            position = numpy.random.randint(0, len(process_instance) - 1)
-            unique_resource = [x for x in unique_resource if x != context[position][0]]
-            context[position][0] = numpy.random.choice(unique_resource)
-
-        return process_instance, context
 
 
     def add_workarounds_to_event_log(self, args, no_outliers):
@@ -699,8 +686,8 @@ class Preprocessor(object):
         process_instances_context_wa = []
         label = [0] * len(process_instances_)  # 0 means that a process instance does not include a workaround
         probability = 0.3  # 30% of the process instances include workarounds
-        unique_events = general.get_unique_events(process_instances_)
-        unique_context = general.get_unique_context(process_instances_context_)
+        unique_events = utils.get_unique_events(process_instances_)
+        unique_context = utils.get_unique_context(process_instances_context_)
 
         for index in range(0, len(process_instances_)):
 
@@ -708,7 +695,7 @@ class Preprocessor(object):
 
                 workaround_form = int(numpy.random.uniform(1, 7 + 1))  # + 1 since it excludes the upper bound
 
-                if workaround_form == 1:  # "injured_responsibility"
+                if workaround_form == 1:  # injured_responsibility
                     process_instance_wa, process_instance_context_wa = \
                         wa.injured_responsibility(
                             process_instances_[index],
@@ -720,7 +707,7 @@ class Preprocessor(object):
                     process_instances_context_wa.append(process_instance_context_wa)
                     label[index] = workaround_form
 
-                elif workaround_form == 2:  # "manipulated_data"
+                elif workaround_form == 2:  # manipulated_data
                     process_instance_wa, process_instance_context_wa = \
                         wa.manipulated_data(
                             process_instances_[index],
@@ -733,7 +720,7 @@ class Preprocessor(object):
                     process_instances_context_wa.append(process_instance_context_wa)
                     label[index] = workaround_form
 
-                elif workaround_form == 3:  # "repeated_activity"
+                elif workaround_form == 3:  # repeated_activity
                     process_instance_wa, process_instance_context_wa = \
                         wa.repeated_activity(
                             process_instances_[index],
@@ -746,7 +733,7 @@ class Preprocessor(object):
                     process_instances_context_wa.append(process_instance_context_wa)
                     label[index] = workaround_form
 
-                elif workaround_form == 4:  # "substituted_activity"
+                elif workaround_form == 4:  # substituted_activity
                     process_instance_wa, process_instance_context_wa = \
                         wa.substituted_activity(
                             process_instances_[index],
@@ -760,7 +747,7 @@ class Preprocessor(object):
                     process_instances_context_wa.append(process_instance_context_wa)
                     label[index] = workaround_form
 
-                elif workaround_form == 5:  # "interchanged_activity"
+                elif workaround_form == 5:  # interchanged_activity
                     process_instance_wa, process_instance_context_wa = \
                          wa.interchanged_activity(
                             process_instances_[index],
@@ -771,7 +758,7 @@ class Preprocessor(object):
                     process_instances_context_wa.append(process_instance_context_wa)
                     label[index] = workaround_form
 
-                elif workaround_form == 6:  # "bypassed_activity"
+                elif workaround_form == 6:  # bypassed_activity
                     process_instance_wa, process_instance_context_wa = \
                         wa.bypassed_activity(
                             process_instances_[index],
@@ -782,7 +769,7 @@ class Preprocessor(object):
                     process_instances_context_wa.append(process_instance_context_wa)
                     label[index] = workaround_form
 
-                elif workaround_form == 7:  # "added_activity"
+                elif workaround_form == 7:  # added_activity
                     process_instance_wa, process_instance_context_wa = \
                         wa.added_activity(
                             process_instances_[index],
