@@ -11,7 +11,7 @@
     - hyper-parameter optimization with a 10%-validation-set of the training set
 5. Apply the CNN model on the prediction set including noise (10%)
 
-# Setting
+## Setting
 1. Binary encoded categorical attributes (less sparse than one-hot encoding)
 2. An Autoencoder; no hyper-parameter optimization; threshold not optimized 
 3. -
