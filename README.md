@@ -18,8 +18,8 @@
 5. -
 
 ## Paper
-This repository contains the implementation of GRM from X.
-To cite this work, please use:
+This repository contains the implementation of the work from XY.
+A preliminary version of this method was presented in:
 ```
 @proceedings{weinzierl2020wdwdl,
     title={Detecting Workarounds in Business Processes -- a Deep Learning method for Analyzing Event Logs},
