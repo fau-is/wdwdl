@@ -1,5 +1,5 @@
 from __future__ import division
-import wdwdl.utils as utils
+import wdwdl.src.utils.general as utils
 from tensorflow.keras.models import load_model
 
 

@@ -11,7 +11,7 @@ from functools import reduce
 import os
 import tensorflow.keras.backend as K
 import tensorflow as tf
-from matplotlib import pyplot as plt
+
 
 output = {
     "accuracy_values": [],
@@ -55,15 +55,6 @@ def arg_max(list_):
     return numpy.argmax(list_, axis=1)
 
 
-def plot_learning_curve(history, learning_epochs):
-    loss = history.history['loss']
-    val_loss = history.history['val_loss']
-    plt.figure()
-    plt.plot(range(learning_epochs), loss, 'bo', label='Training loss')
-    plt.plot(range(learning_epochs), val_loss, 'b', label='Validation loss')
-    plt.title('Training and validation loss')
-    plt.legend()
-    plt.show()
 
 
 

@@ -3,11 +3,12 @@ import numpy
 import pandas
 import category_encoders
 import copy
-import wdwdl.utils as utils
+import wdwdl.src.utils.plot as plot
+import wdwdl.src.utils.general as general
 import tensorflow as tf
-import plotly
 import pickle
 import wdwdl.src.workarounds.workarounds as wa
+import plotly
 
 
 def get_context_attributes_of_event(event):
@@ -49,26 +50,7 @@ def remove_end_mark_from_event_column(data):
     return orig_column
 
 
-def plot_reconstruction_error(df, col):
 
-    x = df.index.tolist()
-    y = df[col].tolist()
-
-    trace = {'type': 'scatter',
-             'x': x,
-             'y': y,
-             'mode': 'markers'
-             # 'marker': {'colorscale': 'red', 'opacity': 0.5}
-             }
-    data = plotly.graph_objs.Data([trace])
-    layout = {'title': 'Reconstruction error for each process instance',
-              'titlefont': {'size': 30},
-              'xaxis': {'title': 'Process instance', 'titlefont': {'size': 20}},
-              'yaxis': {'title': 'Reconstruction error', 'titlefont': {'size': 20}},
-              'hovermode': 'closest'
-              }
-    figure = plotly.graph_objs.Figure(data=data, layout=layout)
-    return figure
 
 
 class Preprocessor(object):
@@ -139,7 +121,7 @@ class Preprocessor(object):
     }
 
     def __init__(self, args):
-        utils.llprint("Initialization ... \n")
+        general.llprint("Initialization ... \n")
         self.data_structure['support']['num_folds'] = args.num_folds
         self.data_structure['support']['data_dir'] = args.data_dir + args.data_set
         self.data_structure['support']['encoded_data_dir'] = r'%s' % args.data_dir + r'encoded_%s' % args.data_set
@@ -340,10 +322,10 @@ class Preprocessor(object):
 
     def add_end_mark_to_event_column(self, column_name):
 
-        dataframe = self.data_structure['encoding']['eventlog_df']
+        data_frame = self.data_structure['encoding']['eventlog_df']
         end_mark = self.data_structure['support']['end_process_instance']
 
-        df_columns = dataframe.columns
+        df_columns = data_frame.columns
         new_row = []
         for column in df_columns:
             if column == column_name:
@@ -351,10 +333,10 @@ class Preprocessor(object):
             else:
                 new_row.append(0)
 
-        row_df = pandas.DataFrame([new_row], columns=dataframe.columns)
-        dataframe = dataframe.append(row_df, ignore_index=True)
+        row_df = pandas.DataFrame([new_row], columns=data_frame.columns)
+        data_frame = data_frame.append(row_df, ignore_index=True)
 
-        return dataframe
+        return data_frame
 
     def save_mapping_of_encoded_events(self, column, encoded_column):
 
@@ -477,7 +459,7 @@ class Preprocessor(object):
 
             # get ides for data and prediction set
             ids_data_set, ids_pred_set, _, _ = \
-                utils.train_test_ids_from_data_set(self.data_structure["data"]["ids_process_instances"], self.data_structure["data"]["ids_process_instances"], 0.1)
+                general.train_test_ids_from_data_set(self.data_structure["data"]["ids_process_instances"], self.data_structure["data"]["ids_process_instances"], 0.1)
 
             # get data for pred set
             self.data_structure["data"]["predict"]["process_instances"] = [self.data_structure["data"]["process_instances"][index] for index in range(len(self.data_structure["data"]["process_instances"])) if index in ids_pred_set]
@@ -493,13 +475,13 @@ class Preprocessor(object):
     def check_for_context_attributes_df(self, event):
 
         if len(event) == self.data_structure['encoding']['num_values_control_flow']:
-            utils.llprint("No context attributes found ...\n")
+            general.llprint("No context attributes found ...\n")
         else:
             self.data_structure['meta']['num_attributes_context'] = len(
                 self.data_structure['encoding']['context_attributes'])
             self.data_structure['encoding']['num_values_context'] = sum(
                 self.data_structure['encoding']['context_attributes'])
-            utils.llprint("%d context attributes found ...\n" % self.data_structure['meta']['num_attributes_context'])
+            general.llprint("%d context attributes found ...\n" % self.data_structure['meta']['num_attributes_context'])
 
     def add_encoded_event_to_process_instance(self, event, process_instance):
 
@@ -622,9 +604,13 @@ class Preprocessor(object):
         return data_set
 
     def clean_event_log(self, args):
-        """ clean the event log with an Autoencoder. """
+        """
+        clean the event log with an Autoencoder.
+        :param args:
+        :return:
+        """
 
-        utils.llprint("Create data set as tensor ... \n")
+        general.llprint("Create data set as tensor ... \n")
         features_data = self.get_2d_data_tensor()
         features_data_df = pandas.DataFrame(data=features_data[0:, 0:],
                                             index=[i for i in range(features_data.shape[0])],
@@ -654,14 +640,14 @@ class Preprocessor(object):
                                   )
 
         # df_history = pandas.DataFrame(history.history)
-        # utils.plot_learning_curve(history, learning_epochs)
+        # plot.plot_learning_curve(history, learning_epochs)
 
         # remove noise of event log data
         predictions = autoencoder.predict(features_data)
         mse = numpy.mean(numpy.power(features_data - predictions, 2), axis=1)
         df_error = pandas.DataFrame({'reconstruction_error': mse}, index=[i for i in range(features_data.shape[0])])
 
-        plot_error = plot_reconstruction_error(df_error, 'reconstruction_error')
+        plot_error = plot.reconstruction_error(df_error, 'reconstruction_error')
         print(plotly.offline.plot(plot_error))
         threshold = df_error['reconstruction_error'].median() + (df_error['reconstruction_error'].std())
         no_outliers = df_error.index[df_error['reconstruction_error'] <= threshold].tolist()  # < 0.0005
@@ -713,8 +699,8 @@ class Preprocessor(object):
         process_instances_context_wa = []
         label = [0] * len(process_instances_)  # 0 means that a process instance does not include a workaround
         probability = 0.3  # 30% of the process instances include workarounds
-        unique_events = utils.get_unique_events(process_instances_)
-        unique_context = utils.get_unique_context(process_instances_context_)
+        unique_events = general.get_unique_events(process_instances_)
+        unique_context = general.get_unique_context(process_instances_context_)
 
         for index in range(0, len(process_instances_)):
 
@@ -875,8 +861,7 @@ class Preprocessor(object):
         return data_set, label
 
     def prepare_event_log_for_prediction(self):
-
-        utils.llprint("Create data set as tensor ... \n")
+        general.llprint("Create data set as tensor ... \n")
         features_data = self.get_2d_data_tensor_prediction()
 
         return features_data

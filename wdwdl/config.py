@@ -1,6 +1,6 @@
 import os
 import argparse
-import wdwdl.utils as utils
+import wdwdl.src.utils.general as utils
 
 
 def load():

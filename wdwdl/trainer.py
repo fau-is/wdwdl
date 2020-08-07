@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 import wdwdl.hyperparameter_optimization as hpopt
-import wdwdl.utils as utils
+import wdwdl.src.utils.general as utils
 import optuna
 import tensorflow as tf
 
