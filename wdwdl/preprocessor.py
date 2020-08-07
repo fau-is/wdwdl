@@ -1,16 +1,74 @@
 from __future__ import division
-import csv
 import numpy
 import pandas
 import category_encoders
 import copy
 import wdwdl.utils as utils
-import sklearn
-from sklearn.model_selection import KFold, ShuffleSplit
 import tensorflow as tf
 import plotly
-from matplotlib import pyplot as plt
 import pickle
+import wdwdl.src.workarounds.workarounds as wa
+
+
+def get_context_attributes_of_event(event):
+    """ First context attribute is at the 4th position. """
+
+    event = event.tolist()
+
+    return event[3:]
+
+
+def get_attribute_data_type(attribute_column):
+
+    column_type = str(attribute_column.dtype)
+
+    # column_type.startswith('int') or
+    if column_type.startswith('float'):
+        attribute_type = 'num'
+    else:
+        attribute_type = 'cat'
+
+    return attribute_type
+
+
+def get_encoding_mode(args, data_type):
+
+    if data_type == 'num':
+        mode = args.encoding_num
+
+    elif data_type == 'cat':
+        mode = args.encoding_cat
+
+    return mode
+
+
+def remove_end_mark_from_event_column(data):
+
+    orig_column = data.drop(len(data) - 1)
+
+    return orig_column
+
+
+def plot_reconstruction_error(df, col):
+
+    x = df.index.tolist()
+    y = df[col].tolist()
+
+    trace = {'type': 'scatter',
+             'x': x,
+             'y': y,
+             'mode': 'markers'
+             # 'marker': {'colorscale': 'red', 'opacity': 0.5}
+             }
+    data = plotly.graph_objs.Data([trace])
+    layout = {'title': 'Reconstruction error for each process instance',
+              'titlefont': {'size': 30},
+              'xaxis': {'title': 'Process instance', 'titlefont': {'size': 20}},
+              'yaxis': {'title': 'Reconstruction error', 'titlefont': {'size': 20}},
+              'hovermode': 'closest'
+              }
+    figure = plotly.graph_objs.Figure(data=data, layout=layout)
+    return figure
 
 
 class Preprocessor(object):
@@ -143,13 +201,6 @@ class Preprocessor(object):
             max([len(x) for x in self.data_structure['data']['predict']['process_instances']])
         )
 
-    def split_event_log(self, args):
-
-        if args.cross_validation:
-            self.set_indices_k_fold_validation()
-        else:
-            self.set_indices_split_validation(args)
-
     def encode_eventlog(self, args, eventlog_df, logic):
 
         # case
@@ -162,7 +213,7 @@ class Preprocessor(object):
             if column_index == 1 or column_index > 2:
 
                 column = eventlog_df[column_name]
-                column_data_type = self.get_attribute_data_type(column)  # cat or num
+                column_data_type = get_attribute_data_type(column)  # cat or num
 
                 if column_index == 1:
                     # event ID
@@ -193,32 +244,9 @@ class Preprocessor(object):
 
         return encoded_eventlog_df
 
-
-    def get_attribute_data_type(self, attribute_column):
-
-        column_type = str(attribute_column.dtype)
-
-        # column_type.startswith('int') or
-        if column_type.startswith('float'):
-            attribute_type = 'num'
-        else:
-            attribute_type = 'cat'
-
-        return attribute_type
-
-    def get_encoding_mode(self, args, data_type):
-
-        if data_type == 'num':
-            mode = args.encoding_num
-
-        elif data_type == 'cat':
-            mode = args.encoding_cat
-
-        return mode
-
     def encode_column(self, args, attribute_type, attribute_name, column_data_type, logic):
 
-        mode = self.get_encoding_mode(args, column_data_type)
+        mode = get_encoding_mode(args, column_data_type)
 
 
 
@@ -265,7 +293,7 @@ class Preprocessor(object):
 
         if attribute_type == 'event':
             self.save_mapping_of_encoded_events(dataframe[column_name], encoded_data)
-            encoded_data = self.remove_end_mark_from_event_column(encoded_data)
+            encoded_data = remove_end_mark_from_event_column(encoded_data)
 
         elif attribute_type == 'context':
             if isinstance(encoded_data, pandas.DataFrame):
@@ -299,7 +327,7 @@ class Preprocessor(object):
 
         if attribute_type == 'event':
             self.save_mapping_of_encoded_events(dataframe[column_name], encoded_data)
-            encoded_data = self.remove_end_mark_from_event_column(encoded_data)
+            encoded_data = remove_end_mark_from_event_column(encoded_data)
 
         elif attribute_type == 'context':
             if isinstance(encoded_data, pandas.DataFrame):
@@ -328,12 +356,6 @@ class Preprocessor(object):
 
         return dataframe
 
-    def remove_end_mark_from_event_column(self, data):
-
-        orig_column = data.drop(len(data) - 1)
-
-        return orig_column
-
     def save_mapping_of_encoded_events(self, column, encoded_column):
 
         encoded_column_tuples = []
@@ -357,7 +379,6 @@ class Preprocessor(object):
         self.data_structure['encoding']['event_ids']['mapping'] = mapping
 
     def get_encoded_end_mark(self):
-
         return self.data_structure['encoding']['event_ids']['mapping'][
             self.data_structure['support']['end_process_instance']]
 
@@ -367,13 +388,13 @@ class Preprocessor(object):
     def set_length_of_context_encoding(self, num_columns):
         self.data_structure['encoding']['context_attributes'].append(num_columns)
 
-    def get_sequences_from_raw_eventlog(self, eventlog_df):
+    def get_sequences_from_raw_event_log(self, event_log_df):
         id_latest_process_instance_raw = ''
         process_instance_raw = ''
         first_event_of_process_instance_raw = True
         context_attributes_process_instance_raw = []
 
-        for index, event in eventlog_df.iterrows():
+        for index, event in event_log_df.iterrows():
 
             id_current_process_instance = event[0]
 
@@ -393,7 +414,7 @@ class Preprocessor(object):
                     context_attributes_process_instance_raw = []
 
             if self.data_structure['meta']['num_attributes_context'] > 0:
-                context_attributes_event = self.get_context_attributes_of_event(event)
+                context_attributes_event = get_context_attributes_of_event(event)
                 context_attributes_process_instance_raw.append(context_attributes_event)
 
             process_instance_raw.append(event[1])
@@ -453,14 +474,17 @@ class Preprocessor(object):
 
         # first, filter out process instances for prediction
         if self.data_structure["meta"]["flag_pred_split"]:
+
+            # get ides for data and prediction set
             ids_data_set, ids_pred_set, _, _ = \
-                self.split_validation(self.data_structure["data"]["ids_process_instances"], self.data_structure["data"]["ids_process_instances"], 0.1)
+                utils.train_test_ids_from_data_set(self.data_structure["data"]["ids_process_instances"], self.data_structure["data"]["ids_process_instances"], 0.1)
 
             # get data for pred set
             self.data_structure["data"]["predict"]["process_instances"] = [self.data_structure["data"]["process_instances"][index] for index in range(len(self.data_structure["data"]["process_instances"])) if index in ids_pred_set]
             self.data_structure["data"]["predict"]["context_attributes"] = [self.data_structure["data"]["context_attributes_process_instances"][index] for index in range(len(self.data_structure["data"]["context_attributes_process_instances"])) if index in ids_pred_set]
             self.data_structure["data"]["predict"]["event_ids"] = ids_pred_set
-            # remove pred set from data set
+
+            # remove prediction set from data set
             self.data_structure["data"]["process_instances"] = [self.data_structure["data"]["process_instances"][index] for index in range(len(self.data_structure["data"]["process_instances"])) if index in ids_data_set]
             self.data_structure["data"]["context_attributes_process_instances"] = [self.data_structure["data"]["context_attributes_process_instances"][index] for index in range(len(self.data_structure["data"]["context_attributes_process_instances"])) if index in ids_data_set]
             self.data_structure["data"]["ids_process_instances"] = ids_data_set
@@ -489,13 +513,6 @@ class Preprocessor(object):
         process_instance.append(tuple(encoded_event_id))
 
         return process_instance
-
-    def get_context_attributes_of_event(self, event):
-        """ First context attribute is at the 4th position. """
-
-        event = event.tolist()
-
-        return event[3:]
 
     def get_encoded_context_attributes_of_event(self, event):
 
@@ -528,11 +545,6 @@ class Preprocessor(object):
 
         return event_type
 
-
-    def split_validation(self, data_set, label, test_size):
-        return sklearn.model_selection.train_test_split(data_set, label, test_size=test_size, random_state=0)
-
-
     def get_2d_data_tensor_prediction(self):
         process_instances = self.data_structure['data']['predict']['process_instances']
         context_attributes_process_instances = self.data_structure['data']['predict']['context_attributes']
@@ -540,14 +552,13 @@ class Preprocessor(object):
         number_attributes = self.data_structure['encoding']['num_values_features'] - 2  # case + time
         vector_length = self.data_structure['meta']['max_length_process_instance'] * number_attributes
 
-        # create structure
+        # Create structure
         data_set = numpy.zeros((
             len(process_instances),
             vector_length
         ))
 
-
-        # fill data
+        # Fill data
         for index_instance in range(0, len(process_instances)):
             for time_step in range(0, len(process_instances[index_instance]) - 1):  # -1 end marking
 
@@ -610,39 +621,8 @@ class Preprocessor(object):
 
         return data_set
 
-    def plot_learning_curve(self, history, learning_epochs):
-        loss = history.history['loss']
-        val_loss = history.history['val_loss']
-        plt.figure()
-        plt.plot(range(learning_epochs), loss, 'bo', label='Training loss')
-        plt.plot(range(learning_epochs), val_loss, 'b', label='Validation loss')
-        plt.title('Training and validation loss')
-        plt.legend()
-        plt.show()
-
-    def plot_reconstruction_error(self, df, col):
-
-        x = df.index.tolist()
-        y = df[col].tolist()
-
-        trace = {'type': 'scatter',
-                 'x': x,
-                 'y': y,
-                 'mode': 'markers'
-                 # 'marker': {'colorscale': 'red', 'opacity': 0.5}
-                 }
-        data = plotly.graph_objs.Data([trace])
-        layout = {'title': 'Reconstruction error for each process instance',
-                  'titlefont': {'size': 30},
-                  'xaxis': {'title': 'Process instance', 'titlefont': {'size': 20}},
-                  'yaxis': {'title': 'Reconstruction error', 'titlefont': {'size': 20}},
-                  'hovermode': 'closest'
-                  }
-        figure = plotly.graph_objs.Figure(data=data, layout=layout)
-        return figure
-
     def clean_event_log(self, args):
-        """ clean the event log with an autoencoder. """
+        """ clean the event log with an Autoencoder. """
 
         utils.llprint("Create data set as tensor ... \n")
         features_data = self.get_2d_data_tensor()
@@ -650,7 +630,7 @@ class Preprocessor(object):
                                             index=[i for i in range(features_data.shape[0])],
                                             columns=['f' + str(i) for i in range(features_data.shape[1])])
 
-        # autoencoder
+        # Autoencoder
         input_dimension = features_data.shape[1]
         encoding_dimension = 128
 
@@ -669,19 +649,19 @@ class Preprocessor(object):
         history = autoencoder.fit(features_data, features_data,
                                   epochs=args.dnn_num_epochs_auto_encoder,
                                   batch_size=args.batch_size_train,
-                                  shuffle=True,
+                                  shuffle=False,
                                   validation_split=0.1,
                                   )
 
         # df_history = pandas.DataFrame(history.history)
-        # self.plot_learning_curve(history, learning_epochs)
+        # utils.plot_learning_curve(history, learning_epochs)
 
         # remove noise of event log data
         predictions = autoencoder.predict(features_data)
         mse = numpy.mean(numpy.power(features_data - predictions, 2), axis=1)
         df_error = pandas.DataFrame({'reconstruction_error': mse}, index=[i for i in range(features_data.shape[0])])
 
-        plot_error = self.plot_reconstruction_error(df_error, 'reconstruction_error')
+        plot_error = plot_reconstruction_error(df_error, 'reconstruction_error')
         print(plotly.offline.plot(plot_error))
         threshold = df_error['reconstruction_error'].median() + (df_error['reconstruction_error'].std())
         no_outliers = df_error.index[df_error['reconstruction_error'] <= threshold].tolist()  # < 0.0005
@@ -706,157 +686,11 @@ class Preprocessor(object):
         return process_instance, context
 
 
-    def workaround_manipulated_data(self, process_instance, context, unique_context, max_events=1, max_attributes=1):
-        """
-        Change the value of data attributes.
-        Data attributes are all context attributes without the resource attribute.
-        """
-
-        num_attr = len(context[0])
-        for index_event in range(0, max_events):
-
-            for index_attr in range(0, max_attributes):
-                # random event
-                event = numpy.random.randint(0, len(process_instance) - 1)
-
-                # random attribute
-                attr = numpy.random.randint(1, num_attr)
-                unique_context_attr = [x for x in unique_context[attr] if x != context[event][attr]]
-                context[event][attr] = numpy.random.choice(unique_context_attr)
-
-        return process_instance, context
-
-
-    def workaround_repeated_activity(self, process_instance, context, max_repetitions=1, max_repetition_length=5, min_repetition_length=3):
-        """
-        Repeat an activity and its context attributes n times.
-        """
-
-        for index in range(0, max_repetitions):
-
-            start = numpy.random.randint(0, len(process_instance)-1)
-            end = start + 1
-            number_repetitions = numpy.random.randint(min_repetition_length, max_repetition_length + 1)
-
-            if start > 0:
-                process_instance = process_instance[:start] + [process_instance[start]] * number_repetitions + process_instance[end-1:]
-                context = context[:start] + [context[start]] * number_repetitions + context[end-1:]
-            else:
-                process_instance = [process_instance[start]] * number_repetitions + process_instance[end-1:]
-                context = [context[start]] * number_repetitions + context[end-1:]
-
-        return process_instance, context
-
-
-    def workaround_substituted_activity(self, process_instance, context, unique_events, process_instances, process_instances_context, max_substitutions=1):
-        """
-        Substitute an activity by another activity and its context attributes.
-        """
-
-        num_context_attr = len(context[0])
-        unique_events = [x for x in unique_events if x not in process_instance]
-
-        for index in range(0, max_substitutions):
-            position = numpy.random.randint(0, len(process_instance) - 1)
-
-            # event
-            event_new = numpy.random.choice(unique_events)
-
-            # context
-            """
-            select from a randomly selected process instance where the new event is included
-            if the new event is not included in 25 randomly selected process instances, 
-            than set the default value 0 for each context attribute
-            """
-            context_new = utils.get_context_for_random_event(event_new, process_instances, process_instances_context)
-            if context_new == -1:
-                context_new = [0] * num_context_attr
-
-            if position > 0:
-                process_instance = process_instance[:position] + [event_new] + process_instance[position:]
-                context = context[:position] + [context_new] + context[position:]
-            else:
-                process_instance = [event_new] + process_instance[position:]
-                context = [context_new] + context[position:]
-
-        return process_instance, context
-
-
-    def workaround_interchanged_activity(self, process_instance, context, max_interchanges=1):
-        """
-        Pairwise change of two activities and its context attributes.
-        """
-
-        for index in range(0, max_interchanges):
-
-            start = numpy.random.randint(0, len(process_instance)-1)
-            end = start + 1
-
-            if start > 0:
-                process_instance = process_instance[:start] + [process_instance[end]] + [process_instance[start]] + process_instance[end:]
-                context = context[:start] + [context[end]] + [context[start]] + context[end:]
-            else:
-                process_instance = [process_instance[end]] + [process_instance[start]] + process_instance[end:]
-                context = [context[end]] + [context[start]] + context[end:]
-
-        return process_instance, context
-
-
-    def workaround_bypassed_activity(self, process_instance, context, max_sequence_size=1):
-        """
-        Skips an activity or an sequence of of activities and its context attributes.
-        """
-
-        size = numpy.random.randint(1, min(len(process_instance) - 1, max_sequence_size) + 1)
-        start = numpy.random.randint(0, len(process_instance) - size)
-        end = start + size
-
-        process_instance = process_instance[:start] + process_instance[end:]
-        context = context[:start] + context[end:]
-
-        return process_instance, context
-
-
-    def workaround_added_activity(self, process_instance, context, unique_events, process_instances, process_instances_context, max_adds=1):
-        """
-        Adds an activity and its context attributes.
-        """
-
-        num_context_attr = len(context[0])
-        unique_events = [x for x in unique_events if x not in process_instance]
-
-        for index in range(0, max_adds):
-            position = numpy.random.randint(0, len(process_instance) - 1)
-
-            # event
-            event_new = numpy.random.choice(unique_events)
-
-            # context
-            """
-            select from a randomly selected process instance where the new event is included
-            if the new event is not included in 25 randomly selected process instances, 
-            than set the default value 0 for each context attribute
-            """
-            context_new = utils.get_context_for_random_event(event_new, process_instances, process_instances_context)
-            if context_new == -1:
-                context_new = [0] * num_context_attr
-
-            if position > 0:
-                process_instance = process_instance[:position] + [event_new] + process_instance[position-1:]
-                context = context[:position] + [context_new] + context[position-1:]
-            else:
-                process_instance = [event_new] + process_instance
-                context = [context_new] + context
-
-
-        return process_instance, context
-
-
     def add_workarounds_to_event_log(self, args, no_outliers):
 
         # get process instances
         eventlog_df = self.data_structure['encoding']['eventlog_df']
-        self.get_sequences_from_raw_eventlog(eventlog_df)
+        self.get_sequences_from_raw_event_log(eventlog_df)
 
         # remove pred set from raw structures
         self.data_structure["data"]["process_instances_raw"] = [self.data_structure["data"]["process_instances_raw"][index] for index in range(len(self.data_structure["data"]["process_instances_raw"])) if index in self.data_structure["data"]["ids_process_instances"]]
@@ -890,7 +724,7 @@ class Preprocessor(object):
 
                 if workaround_form == 1:  # "injured_responsibility"
                     process_instance_wa, process_instance_context_wa = \
-                        self.workaround_injured_responsiblity(
+                        wa.injured_responsibility(
                             process_instances_[index],
                             process_instances_context_[index],
                             unique_context,
@@ -902,7 +736,7 @@ class Preprocessor(object):
 
                 elif workaround_form == 2:  # "manipulated_data"
                     process_instance_wa, process_instance_context_wa = \
-                        self.workaround_manipulated_data(
+                        wa.manipulated_data(
                             process_instances_[index],
                             process_instances_context_[index],
                             unique_context,
@@ -915,7 +749,7 @@ class Preprocessor(object):
 
                 elif workaround_form == 3:  # "repeated_activity"
                     process_instance_wa, process_instance_context_wa = \
-                        self.workaround_repeated_activity(
+                        wa.repeated_activity(
                             process_instances_[index],
                             process_instances_context_[index],
                             max_repetitions=1,
@@ -928,7 +762,7 @@ class Preprocessor(object):
 
                 elif workaround_form == 4:  # "substituted_activity"
                     process_instance_wa, process_instance_context_wa = \
-                        self.workaround_substituted_activity(
+                        wa.substituted_activity(
                             process_instances_[index],
                             process_instances_context_[index],
                             unique_events,
@@ -942,7 +776,7 @@ class Preprocessor(object):
 
                 elif workaround_form == 5:  # "interchanged_activity"
                     process_instance_wa, process_instance_context_wa = \
-                        self.workaround_interchanged_activity(
+                         wa.interchanged_activity(
                             process_instances_[index],
                             process_instances_context_[index],
                             max_interchanges=1
@@ -953,7 +787,7 @@ class Preprocessor(object):
 
                 elif workaround_form == 6:  # "bypassed_activity"
                     process_instance_wa, process_instance_context_wa = \
-                        self.workaround_bypassed_activity(
+                        wa.bypassed_activity(
                             process_instances_[index],
                             process_instances_context_[index],
                             max_sequence_size=3
@@ -964,7 +798,7 @@ class Preprocessor(object):
 
                 elif workaround_form == 7:  # "added_activity"
                     process_instance_wa, process_instance_context_wa = \
-                        self.workaround_added_activity(
+                        wa.added_activity(
                             process_instances_[index],
                             process_instances_context_[index],
                             unique_events,

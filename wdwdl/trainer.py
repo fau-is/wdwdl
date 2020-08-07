@@ -193,8 +193,8 @@ def find_best_model(trial):
               epochs=args.dnn_num_epochs)
 
     score = model.evaluate(x_test, y_test, verbose=0)
-    print(0)
-    #
+
+    # we perform HOP regarding the recall metric
     return score[2]
 
 

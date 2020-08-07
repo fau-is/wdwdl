@@ -11,6 +11,7 @@ from functools import reduce
 import os
 import tensorflow.keras.backend as K
 import tensorflow as tf
+from matplotlib import pyplot as plt
 
 output = {
     "accuracy_values": [],
@@ -39,27 +40,35 @@ class_names = ["No workaround",
                ]
 
 
+def train_test_ids_from_data_set(data_set, label, test_size):
+    """
+    Splits a data set into a train set and a test set.
+    :param data_set:
+    :param label:
+    :param test_size:
+    :return: ids for train and test set.
+    """
+    return sklearn.model_selection.train_test_split(data_set, label, test_size=test_size, random_state=0)
+
+
 def arg_max(list_):
     return numpy.argmax(list_, axis=1)
 
 
+def plot_learning_curve(history, learning_epochs):
+    loss = history.history['loss']
+    val_loss = history.history['val_loss']
+    plt.figure()
+    plt.plot(range(learning_epochs), loss, 'bo', label='Training loss')
+    plt.plot(range(learning_epochs), val_loss, 'b', label='Validation loss')
+    plt.title('Training and validation loss')
+    plt.legend()
+    plt.show()
+
+
+
 def convert_label_to_categorical(label):
     return tf.keras.utils.to_categorical(label)
-
-
-def load(path):
-    return pickle.load(open(path, 'rb'))
-
-
-def load_output():
-    return output
-
-
-def avg(numbers):
-    if len(numbers) == 0:
-        return sum(numbers)
-
-    return sum(numbers) / len(numbers)
 
 
 def llprint(message):
@@ -69,12 +78,6 @@ def llprint(message):
 
 def load(path):
     return pickle.load(open(path, 'rb'))
-
-
-def onehot(index, size):
-    vec = numpy.zeros(int(size), dtype=numpy.float32)
-    vec[int(index)] = 1.0
-    return vec
 
 
 def str2bool(v):
