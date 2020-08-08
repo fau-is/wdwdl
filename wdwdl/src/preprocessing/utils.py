@@ -18,3 +18,42 @@ def get_unique_context(process_instances_context_):
         unique_context.append(unique_context_attr)
 
     return unique_context
+
+
+def get_context_attributes_of_event(event):
+    """ First context attribute is at the 4th position. """
+
+    event = event.tolist()
+
+    return event[3:]
+
+
+def get_attribute_data_type(attribute_column):
+
+    column_type = str(attribute_column.dtype)
+
+    # column_type.startswith('int') or
+    if column_type.startswith('float'):
+        attribute_type = 'num'
+    else:
+        attribute_type = 'cat'
+
+    return attribute_type
+
+
+def get_encoding_mode(args, data_type):
+
+    if data_type == 'num':
+        mode = args.encoding_num
+
+    elif data_type == 'cat':
+        mode = args.encoding_cat
+
+    return mode
+
+
+def remove_end_mark_from_event_column(data):
+
+    orig_column = data.drop(len(data) - 1)
+
+    return orig_column

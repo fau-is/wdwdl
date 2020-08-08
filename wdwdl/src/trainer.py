@@ -5,6 +5,33 @@ import optuna
 import tensorflow as tf
 
 
+def train_ae_noise_removing(args, features_data):
+
+    input_dimension = features_data.shape[1]
+    encoding_dimension = 128
+
+    input_layer = tf.keras.layers.Input(shape=(input_dimension,))
+    encoder = tf.keras.layers.Dense(int(encoding_dimension), activation='tanh')(input_layer)
+    encoder = tf.keras.layers.Dense(int(encoding_dimension / 2), activation='tanh')(encoder)
+    encoder = tf.keras.layers.Dense(int(encoding_dimension / 4), activation='tanh')(encoder)
+    decoder = tf.keras.layers.Dense(int(encoding_dimension / 2), activation='tanh')(encoder)
+    decoder = tf.keras.layers.Dense(int(encoding_dimension), activation='tanh')(decoder)
+    decoder = tf.keras.layers.Dense(input_dimension, activation='sigmoid')(decoder)
+
+    autoencoder = tf.keras.models.Model(inputs=input_layer, outputs=decoder)
+    autoencoder.summary()
+    autoencoder.compile(optimizer='adam', loss='mse')
+
+    autoencoder.fit(features_data, features_data,
+                              epochs=args.dnn_num_epochs_auto_encoder,
+                              batch_size=args.batch_size_train,
+                              shuffle=False,  # shuffle instances per epoch
+                              validation_split=0.1,
+                              )
+
+    return autoencoder
+
+
 def train_nn_wa_classification(args, data_set, label, preprocessor):
     """
     We use an deep artificial neural network for learning the mapping of process instances and labels.
@@ -112,7 +139,7 @@ def find_best_model(trial):
     # b1 = tf.keras.layers.Dropout(0.2)(layer_1)
     """
 
-    # CNN motivated by the work of Abdulrhman et al. (2019)
+    # CNN motivated by the architecture proposed by Abdulrhman et al. (2019).
     input_layer = tf.keras.layers.Input(shape=(hpopt.time_steps, hpopt.number_attributes),
                                         name='input_layer')
 

@@ -12,8 +12,8 @@ def load():
     parser.add_argument('--checkpoint_dir', default="./checkpoints/")
     parser.add_argument('--result_dir', default="./results/")
     parser.add_argument('--encoding_num', default="min_max_norm", type=str)  # for numerical attributes min-max norm
-    parser.add_argument('--encoding_cat', default="bin", type=str)  # for categorical attributes binary encoding;
-    # note one-hot encoding of the categorical attributes can lead to memory errors
+    parser.add_argument('--encoding_cat', default="bin", type=str)  # for categorical attributes binary encoding; note one-hot encoding of the categorical attributes can lead to memory errors
+    parser.add_argument('--verbose', default=False, type=general.str2bool)
 
     # Training
     parser.add_argument('--task', default="workaround_detection")
@@ -25,18 +25,10 @@ def load():
     # Evaluation
     parser.add_argument('--seed', default=True, type=general.str2bool)
     parser.add_argument('--seed_val', default=1377, type=int)
-
-    # Note cross validation is not implemented; only split validation
-    parser.add_argument('--num_folds', default=3, type=int)  # 10
-    parser.add_argument('--cross_validation', default=False, type=general.str2bool)
-    parser.add_argument('--split_rate_test', default=0.7, type=float)
-
-    # Hyper-parameter optimization
-    parser.add_argument('--hpopt', default=True, type=general.str2bool)
+    parser.add_argument('--hpopt', default=True, type=general.str2bool)  # Hyper-parameter optimization
     parser.add_argument('--hpopt_eval_runs', default=3, type=int)
     parser.add_argument('--split_rate_test_hpopt', default=0.1, type=float)  # size of validation set in hpo
-
-    parser.add_argument('--hpopt_optimizer', default=['adam', 'nadam', general.ams_grad()], type=list)
+    parser.add_argument('--hpopt_optimizer', default=['adam', 'nadam', general.ams_grad()], type=list)  # hyper-parameters
     parser.add_argument('--hpopt_activation', default=['linear', 'tanh', 'relu'], type=list)
     parser.add_argument('--hpopt_filters', default=[128, 64, 32], type=list)
     parser.add_argument('--hpopt_kernels_size', default=[32, 16, 8], type=list)

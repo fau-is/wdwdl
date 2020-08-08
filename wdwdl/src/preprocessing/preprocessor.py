@@ -9,64 +9,16 @@ import tensorflow as tf
 import pickle
 import wdwdl.src.workarounds.workarounds as wa
 import wdwdl.src.preprocessing.utils as utils
+import wdwdl.src.trainer as trainer
 import plotly
 
 
-
-def get_context_attributes_of_event(event):
-    """ First context attribute is at the 4th position. """
-
-    event = event.tolist()
-
-    return event[3:]
-
-
-def get_attribute_data_type(attribute_column):
-
-    column_type = str(attribute_column.dtype)
-
-    # column_type.startswith('int') or
-    if column_type.startswith('float'):
-        attribute_type = 'num'
-    else:
-        attribute_type = 'cat'
-
-    return attribute_type
-
-
-def get_encoding_mode(args, data_type):
-
-    if data_type == 'num':
-        mode = args.encoding_num
-
-    elif data_type == 'cat':
-        mode = args.encoding_cat
-
-    return mode
-
-
-def remove_end_mark_from_event_column(data):
-
-    orig_column = data.drop(len(data) - 1)
-
-    return orig_column
-
-
-
-
-
 class Preprocessor(object):
+
     data_structure = {
         'support': {
-            'num_folds': 1,
             'data_dir': "",
             'encoded_data_dir': "",
-            'ascii_offset': 161,
-            'data_format': "%d.%m.%Y-%H:%M:%S",
-            'train_index_per_fold': [],
-            'test_index_per_fold': [],
-            'iteration_cross_validation': 0,
-            'elements_per_fold': 0,
             'event_labels': [],
             'event_types': [],
             'map_event_label_to_event_id': [],
@@ -123,8 +75,12 @@ class Preprocessor(object):
     }
 
     def __init__(self, args):
+        """
+        Creates a pre-processor object.
+        :param args: pre-processor.
+        """
+
         general.llprint("Initialization ... \n")
-        self.data_structure['support']['num_folds'] = args.num_folds
         self.data_structure['support']['data_dir'] = args.data_dir + args.data_set
         self.data_structure['support']['encoded_data_dir'] = r'%s' % args.data_dir + r'encoded_%s' % args.data_set
 
@@ -136,10 +92,6 @@ class Preprocessor(object):
         self.set_number_control_flow_attributes()
 
         self.get_sequences_from_encoded_eventlog(eventlog_df)
-
-        self.data_structure['support']['elements_per_fold'] = \
-            int(round(self.data_structure['meta']['num_process_instances'] /
-                      self.data_structure['support']['num_folds']))
 
         end_marked_process_instances = []
         for process_instance in self.data_structure['data']['process_instances']:
@@ -197,7 +149,7 @@ class Preprocessor(object):
             if column_index == 1 or column_index > 2:
 
                 column = eventlog_df[column_name]
-                column_data_type = get_attribute_data_type(column)  # cat or num
+                column_data_type = utils.get_attribute_data_type(column)  # cat or num
 
                 if column_index == 1:
                     # event ID
@@ -230,7 +182,7 @@ class Preprocessor(object):
 
     def encode_column(self, args, attribute_type, attribute_name, column_data_type, logic):
 
-        mode = get_encoding_mode(args, column_data_type)
+        mode = utils.get_encoding_mode(args, column_data_type)
 
 
 
@@ -277,7 +229,7 @@ class Preprocessor(object):
 
         if attribute_type == 'event':
             self.save_mapping_of_encoded_events(dataframe[column_name], encoded_data)
-            encoded_data = remove_end_mark_from_event_column(encoded_data)
+            encoded_data = utils.remove_end_mark_from_event_column(encoded_data)
 
         elif attribute_type == 'context':
             if isinstance(encoded_data, pandas.DataFrame):
@@ -311,7 +263,7 @@ class Preprocessor(object):
 
         if attribute_type == 'event':
             self.save_mapping_of_encoded_events(dataframe[column_name], encoded_data)
-            encoded_data = remove_end_mark_from_event_column(encoded_data)
+            encoded_data = utils.remove_end_mark_from_event_column(encoded_data)
 
         elif attribute_type == 'context':
             if isinstance(encoded_data, pandas.DataFrame):
@@ -398,7 +350,7 @@ class Preprocessor(object):
                     context_attributes_process_instance_raw = []
 
             if self.data_structure['meta']['num_attributes_context'] > 0:
-                context_attributes_event = get_context_attributes_of_event(event)
+                context_attributes_event = utils.get_context_attributes_of_event(event)
                 context_attributes_process_instance_raw.append(context_attributes_event)
 
             process_instance_raw.append(event[1])
@@ -614,43 +566,19 @@ class Preprocessor(object):
 
         general.llprint("Create data set as tensor ... \n")
         features_data = self.get_2d_data_tensor()
-        features_data_df = pandas.DataFrame(data=features_data[0:, 0:],
-                                            index=[i for i in range(features_data.shape[0])],
-                                            columns=['f' + str(i) for i in range(features_data.shape[1])])
 
-        # Autoencoder
-        input_dimension = features_data.shape[1]
-        encoding_dimension = 128
+        general.llprint("Learn autoencoder model ... \n")
+        autoencoder = trainer.train_ae_noise_removing(args, features_data)
 
-        input_layer = tf.keras.layers.Input(shape=(input_dimension,))
-        encoder = tf.keras.layers.Dense(int(encoding_dimension), activation='tanh')(input_layer)
-        encoder = tf.keras.layers.Dense(int(encoding_dimension / 2), activation='tanh')(encoder)
-        encoder = tf.keras.layers.Dense(int(encoding_dimension / 4), activation='tanh')(encoder)
-        decoder = tf.keras.layers.Dense(int(encoding_dimension / 2), activation='tanh')(encoder)
-        decoder = tf.keras.layers.Dense(int(encoding_dimension), activation='tanh')(decoder)
-        decoder = tf.keras.layers.Dense(input_dimension, activation='sigmoid')(decoder)
-
-        autoencoder = tf.keras.models.Model(inputs=input_layer, outputs=decoder)
-        autoencoder.summary()
-        autoencoder.compile(optimizer='adam', loss='mse')
-
-        history = autoencoder.fit(features_data, features_data,
-                                  epochs=args.dnn_num_epochs_auto_encoder,
-                                  batch_size=args.batch_size_train,
-                                  shuffle=False,  # shuffle instances per epoch
-                                  validation_split=0.1,
-                                  )
-
-        # df_history = pandas.DataFrame(history.history)
-        # plot.plot_learning_curve(history, learning_epochs)
-
-        # remove noise of event log data
+        # Remove noise of event log data
         predictions = autoencoder.predict(features_data)
         mse = numpy.mean(numpy.power(features_data - predictions, 2), axis=1)
         df_error = pandas.DataFrame({'reconstruction_error': mse}, index=[i for i in range(features_data.shape[0])])
 
-        plot_error = plot.reconstruction_error(df_error, 'reconstruction_error')
-        print(plotly.offline.plot(plot_error))
+        if args.verbose:
+            plot_error = plot.reconstruction_error(df_error, 'reconstruction_error')
+            print(plotly.offline.plot(plot_error))
+
         threshold = df_error['reconstruction_error'].median() + (df_error['reconstruction_error'].std())
         no_outliers = df_error.index[df_error['reconstruction_error'] <= threshold].tolist()  # < 0.0005
         general.llprint("Number of outliers: %i\n" % (len(features_data) - len(no_outliers)))
@@ -660,20 +588,26 @@ class Preprocessor(object):
 
 
     def add_workarounds_to_event_log(self, args, no_outliers):
+        """
+        Adds workarounds to instances of an event log.
+        :param args:
+        :param no_outliers:
+        :return:
+        """
 
-        # get process instances
+        # Get process instances
         eventlog_df = self.data_structure['encoding']['eventlog_df']
         self.get_sequences_from_raw_event_log(eventlog_df)
 
-        # remove pred set from raw structures
+        # Remove pred set from raw structures
         self.data_structure["data"]["process_instances_raw"] = [self.data_structure["data"]["process_instances_raw"][index] for index in range(len(self.data_structure["data"]["process_instances_raw"])) if index in self.data_structure["data"]["ids_process_instances"]]
         self.data_structure["data"]["context_attributes_process_instances_raw"] = [self.data_structure["data"]["context_attributes_process_instances_raw"][index] for index in range(len(self.data_structure["data"]["context_attributes_process_instances_raw"])) if index in self.data_structure["data"]["ids_process_instances"]]
 
-        # raw structures
+        # Raw structures
         process_instances = self.data_structure['data']['process_instances_raw']
         process_instances_context = self.data_structure['data']['context_attributes_process_instances_raw']
 
-        # get process instance without noise
+        # Get process instance without noise
         process_instances_ = []
         process_instances_context_ = []
         for index in range(0, len(process_instances)):
@@ -681,7 +615,7 @@ class Preprocessor(object):
                 process_instances_.append(process_instances[index])
                 process_instances_context_.append(process_instances_context[index])
 
-        # add workaround
+        # Add workaround
         process_instances_wa = []
         process_instances_context_wa = []
         label = [0] * len(process_instances_)  # 0 means that a process instance does not include a workaround
@@ -787,62 +721,60 @@ class Preprocessor(object):
                 process_instances_wa.append(process_instances_[index])
                 process_instances_context_wa.append(process_instances_context_[index])
 
-        # from instance-based list to event-based numpy array
+        # From instance-based list to event-based numpy array
         number_of_events = sum(list([len(element) for element in process_instances_wa]))
         data_set = numpy.zeros((number_of_events, 3 + len(process_instances_context_wa[0][0])))  # case, event and time
 
         index_ = 0
         for index_instance in range(0, len(process_instances_wa)):
-
             for index_event in range(0, len(process_instances_wa[index_instance])):
-                # case
+                # Case
                 data_set[index_, 0] = index_instance
 
-                # event
+                # Event
                 data_set[index_, 1] = process_instances_wa[index_instance][index_event]
 
-                # time
+                # Time
                 data_set[index_, 2] = 0  # only for filling the gap
 
-                # context attributes
+                # Context attributes
                 for index_context in range(0, len(process_instances_context_wa[index_instance][index_event])):
                     data_set[index_, index_context + 3] = process_instances_context_wa[index_instance][index_event][
                         index_context]
-
                 index_ += 1
 
-        # from event-based numpy array to event-based pandas data frame
+        # From event-based numpy array to event-based pandas data frame
         data_set_df = pandas.DataFrame(data=data_set[0:, 0:],
                                        index=[i for i in range(data_set.shape[0])],
                                        columns=[i for i in eventlog_df.columns])
         for x in eventlog_df.columns:
             data_set_df[x] = data_set_df[x].astype(eventlog_df[x].dtypes.name)
 
-        # reset data structure for encoding
+        # Reset data structure for encoding
         self.data_structure['encoding']['event_ids'] = {}
         self.data_structure['encoding']['context_attributes'] = []
         self.data_structure['encoding']['eventlog_df'] = data_set_df
 
-        # encoding of columns
+        # Encoding of columns
         data_set_df = self.encode_eventlog(args, data_set_df, "use")
 
-        # reset of data structure for get_sequence_from_encoded_eventlog
+        # Reset of data structure for get_sequence_from_encoded_eventlog
         self.data_structure['data']['ids_process_instances'] = []
         self.data_structure['data']['process_instances'] = []
         self.data_structure['data']['context_attributes_process_instances'] = []
 
-        # from event-based pandas data frame to instance-based
+        # From event-based pandas data frame to instance-based
         self.get_sequences_from_encoded_eventlog(data_set_df)
 
-        # update of data structure
-        # num_values_context will be automatically set based on encode_eventlog and length of event ids
+        # Update of data structure
+        # Num_values_context will be automatically set based on encode_eventlog and length of event ids
         self.set_number_control_flow_attributes()
         self.set_number_values_features()
 
-        # update of data structure for get_2d_data_tensor
+        # Update of data structure for get_2d_data_tensor
         self.set_max_length_process_instance()
 
-        # from sequence to tensor
+        # From sequence to tensor
         data_set = self.get_2d_data_tensor()
 
         return data_set, label

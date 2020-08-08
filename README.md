@@ -1,9 +1,12 @@
 # A deep-learning-based method for detecting workarounds in event log data
 
+## How to use the method?
+...
+
 ## Steps of the method
 1. Split event log in data set and prediction set (90%/10%)
 2. Filter out noise from data set by using an Autoencoder (AE) model
-3. Integration of workarounds (rules enriched by random elements)
+3. Integration of workarounds (rules enriched by random elements, 30% of the instances include a workaround)
 4. Learn a CNN model for detecting workarounds 
     - based on 80% of the data set
     - test model on 20% of the data set 
