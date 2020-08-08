@@ -16,7 +16,7 @@
 ## Setting
 - Metrics: 
     - accuracy (macro), precision (macro) and recall (macro) -> to not ignore workaround classes with fewer instances  
-    - auc_roc (macro, according to Fawcett (2006)) 
+    - auc_roc (macro, according to Fawcett (2006))
 - Encoding: binary encoded categorical attributes (less sparse than one-hot encoding)
 - HPO
     - Not for AE + threshold not optimized 

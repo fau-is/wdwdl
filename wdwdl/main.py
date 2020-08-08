@@ -9,10 +9,11 @@ import wdwdl.src.utils.metric as metric
 
 if __name__ == '__main__':
 
+    # Init
     args = config.load()
-
-    # Delete encoders from previous experiments
+    results = metric.metrics()
     general.delete_encoders()
+    general.clear_files(args)
 
     # For reproducible results
     if args.seed:
@@ -38,7 +39,7 @@ if __name__ == '__main__':
     # Test model
     predictions, prob_dist = predictor.apply_wa_classification(args, data_set_test, preprocessor, best_model_id)
     plot.confusion_matrix(general.arg_max(label_test).tolist(), predictions.tolist(), args)
-    metric.calculate_and_print_output(general.arg_max(label_test).tolist(), label_test, predictions.tolist(), prob_dist)
+    metric.calculate_and_print_output(args, general.arg_max(label_test).tolist(), label_test, predictions.tolist(), prob_dist, results)
 
     # Predict workarounds
     data_set_pred = preprocessor.prepare_event_log_for_prediction()

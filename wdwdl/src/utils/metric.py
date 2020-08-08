@@ -5,9 +5,21 @@ import warnings
 import tensorflow.keras.backend as K
 
 
-def calculate_and_print_output(label_ground_truth, label_ground_truth_one_hot, label_prediction, prob_dist):
+def metrics():
+    return {
+        "accuracy": [],
+        "f1_score": [],
+        "precision": [],
+        "recall": [],
+        "auc_roc": []
+    }
+
+
+def calculate_and_print_output(args, label_ground_truth, label_ground_truth_one_hot, label_prediction, prob_dist, results):
     """
     This function calculate and prints the measures.
+    :param args:
+    :param results:
     :param label_ground_truth_one_hot:
     :param prob_dist:
     :param label_ground_truth:
@@ -21,11 +33,28 @@ def calculate_and_print_output(label_ground_truth, label_ground_truth_one_hot, l
     label_ground_truth = np.array(label_ground_truth)
     label_prediction = np.array(label_prediction)
 
-    general.llprint("\nAccuracy: %f\n" % sklearn.metrics.accuracy_score(label_ground_truth, label_prediction))
-    general.llprint("Precision: %f\n" % sklearn.metrics.precision_score(label_ground_truth, label_prediction, average='macro'))
-    general.llprint("Recall: %f\n" % sklearn.metrics.recall_score(label_ground_truth, label_prediction, average='macro'))
-    general.llprint("F1-score: %f\n" % sklearn.metrics.f1_score(label_ground_truth, label_prediction, average='macro'))
-    general.llprint("Auc-roc: %f\n" % multi_class_roc_auc_score(label_ground_truth_one_hot, prob_dist))
+    accuracy = sklearn.metrics.accuracy_score(label_ground_truth, label_prediction)
+    results["accuracy"].append(accuracy)
+    general.llprint("\nAccuracy: %f\n" % accuracy)
+
+    precision = sklearn.metrics.precision_score(label_ground_truth, label_prediction, average='macro')
+    results["precision"].append(precision)
+    general.llprint("Precision: %f\n" % precision)
+
+    recall = sklearn.metrics.recall_score(label_ground_truth, label_prediction, average='macro')
+    results["recall"].append(recall)
+    general.llprint("Recall: %f\n" % recall)
+
+    f1_score = sklearn.metrics.f1_score(label_ground_truth, label_prediction, average='macro')
+    results["f1_score"].append(f1_score)
+    general.llprint("F1-score: %f\n" % f1_score)
+
+    auc_roc = multi_class_roc_auc_score(label_ground_truth_one_hot, prob_dist)
+    results["auc_roc"].append(auc_roc)
+    general.llprint("Auc-roc: %f\n" % auc_roc)
+
+    general.add_to_file(args, "metrics", results)
+
 
 
 

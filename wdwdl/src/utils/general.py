@@ -5,6 +5,7 @@ import sklearn
 import os
 import tensorflow as tf
 import random
+from pathlib import Path
 
 
 class_names = ["No workaround",
@@ -80,8 +81,40 @@ def str2bool(v):
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
-def clear_measurement_file(args):
-    open('./results/output_%s.csv' % (args.data_set[:-4]), "w").close()
+def clear_files(args):
+    clear_file(args, "metrics")
+    clear_file(args, "hyper_params")
+    clear_file(args, "predictions")
+
+
+def clear_file(args, file_type):
+    if Path(args.result_dir + file_type + "_" + args.data_set).is_file():
+        pass
+        # open('%s%s_%s.csv' % (args.result_dir, file_type, args.data_set[:-4]), "w").close()
+    else:
+        file = open('%s%s_%s.csv' % (args.result_dir, file_type, args.data_set[:-4]), "w+")
+        if file_type == "metrics":
+            file.write("Accuracy; f1_score; precision; recall; auc_roc")
+        file.close()
+
+
+
+def add_to_file(args, file_type, input_, aggregate=False):
+    file = open('%s%s_%s.csv' % (args.result_dir, file_type, args.data_set[:-4]), "a+")
+    if file_type == "metrics":
+
+        file.write("\n" + str(input_["accuracy"][-1]) + ";" +
+                   str(input_["f1_score"][-1]) + ";" +
+                   str(input_["precision"][-1]) + ";" +
+                   str(input_["recall"][-1]) + ";" +
+                   str(input_["auc_roc"][-1]))
+
+    elif file_type == "hyper_params":
+        pass
+    elif file_type == "predictions":
+        pass
+
+    file.close()
 
 
 def delete_encoders():
