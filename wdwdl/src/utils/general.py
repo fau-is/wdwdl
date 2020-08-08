@@ -1,6 +1,6 @@
 import argparse
 import sys
-import numpy
+import numpy as np
 import sklearn
 import os
 import tensorflow as tf
@@ -44,8 +44,26 @@ def train_test_ids_from_data_set(data_set, label, test_size):
     return sklearn.model_selection.train_test_split(data_set, label, test_size=test_size, random_state=0)
 
 
+def one_hot_encode(list_):
+    """
+    ...
+    :param list_:
+    :return:
+    """
+
+    b = np.zeros_like(list_)
+    b[np.arange(len(list_)), list_.argmax(1)] = 1
+
+    return b
+
+
 def arg_max(list_):
-    return numpy.argmax(list_, axis=1)
+    """
+    Picks out the index of each row of a matrix with the highest value.
+    :param list_:
+    :return: list of class ids.
+    """
+    return np.argmax(list_, axis=1)
 
 
 def convert_label_to_categorical(label):

@@ -15,9 +15,11 @@ def apply_wa_classification(args, data_set, preprocessor, best_model_id):
         model_name = '%sclf_wa_mapping.h5' % args.checkpoint_dir
 
     model = load_model(model_name, custom_objects={'f1_score': metric.f1_score})
-    predictions = model.predict(data_set)
+    prob_dist = model.predict(data_set)
+    # pred_bin = general.one_hot_encode(prob_dist)
+    pred = general.arg_max(prob_dist)
 
-    return general.arg_max(predictions)
+    return pred, prob_dist
 
 
 def get_prediction_frequency(predictions):

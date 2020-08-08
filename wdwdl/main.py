@@ -31,9 +31,9 @@ if __name__ == '__main__':
     best_model_id = trainer.train_nn_wa_classification(args, data_set_train, label_train, preprocessor)
 
     # Test model
-    predictions = predictor.apply_wa_classification(args, data_set_test, preprocessor, best_model_id)
+    predictions, prob_dist = predictor.apply_wa_classification(args, data_set_test, preprocessor, best_model_id)
     plot.confusion_matrix(general.arg_max(label_test).tolist(), predictions.tolist(), args)
-    metric.calculate_and_print_output(general.arg_max(label_test).tolist(), predictions.tolist())
+    metric.calculate_and_print_output(general.arg_max(label_test).tolist(), label_test, predictions.tolist(), prob_dist)
 
     # Predict workarounds
     data_set_pred = preprocessor.prepare_event_log_for_prediction()
