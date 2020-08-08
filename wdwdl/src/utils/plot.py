@@ -80,12 +80,14 @@ def confusion_matrix(label_ground_truth, label_prediction, args):
     cms.append(cm_df)
 
     def prettify(n):
+        """
         if n > 1000000:
             return str(np.round(n / 1000000, 1)) + 'M'
         elif n > 1000:
             return str(np.round(n / 1000, 1)) + 'K'
         else:
-            return str(n)
+        """
+        return str(n)
 
     cm = reduce(lambda x, y: x.add(y, fill_value=0), cms)
     annot = cm.applymap(prettify)
@@ -99,7 +101,7 @@ def confusion_matrix(label_ground_truth, label_prediction, args):
 
     pyplot.xticks(rotation=45)
     fig.tight_layout()
-    fig.savefig(str(args.result_dir + 'cm.pdf'))
+    fig.savefig(str(args.result_dir + 'cm_' + args.data_set[:-4] + '.pdf'))
 
     general.llprint(str(label_prediction))
     general.llprint(str(label_ground_truth))

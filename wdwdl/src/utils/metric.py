@@ -22,13 +22,12 @@ def calculate_and_print_output(label_ground_truth, label_ground_truth_one_hot, l
     label_prediction = np.array(label_prediction)
 
     general.llprint("\nAccuracy: %f\n" % sklearn.metrics.accuracy_score(label_ground_truth, label_prediction))
-    general.llprint(
-        "Precision: %f\n" % sklearn.metrics.precision_score(label_ground_truth, label_prediction, average='macro'))
-    general.llprint(
-        "Recall: %f\n" % sklearn.metrics.recall_score(label_ground_truth, label_prediction, average='macro'))
+    general.llprint("Precision: %f\n" % sklearn.metrics.precision_score(label_ground_truth, label_prediction, average='macro'))
+    general.llprint("Recall: %f\n" % sklearn.metrics.recall_score(label_ground_truth, label_prediction, average='macro'))
     general.llprint("F1-score: %f\n" % sklearn.metrics.f1_score(label_ground_truth, label_prediction, average='macro'))
-
     general.llprint("Auc-roc: %f\n" % multi_class_roc_auc_score(label_ground_truth_one_hot, prob_dist))
+
+
 
 
 def multi_class_roc_auc_score(ground_truth_one_hot, prob_dist, average='macro', multi_class='ovr'):

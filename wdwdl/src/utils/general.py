@@ -7,22 +7,6 @@ import tensorflow as tf
 import random
 
 
-output = {
-    "accuracy_values": [],
-    "accuracy_value": 0.0,
-    "precision_values": [],
-    "precision_value": 0.0,
-    "recall_values": [],
-    "recall_value": 0.0,
-    "f1_values": [],
-    "f1_value": 0.0,
-    "auc_roc_values": [],
-    "auc_roc_value": 0.0,
-    "auc_prc_values": [],
-    "auc_prc_value": 0.0,
-    "training_time_seconds": []
-}
-
 class_names = ["No workaround",
                "Injured responsibility",
                "Manipulated data",
