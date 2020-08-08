@@ -23,7 +23,7 @@
 
 ## Further details
 - For both models (i.e. AE and CNN), we do not shuffle the instances per epoch.
-- Ensuring reproducible results via a seed:
+- Ensuring reproducible results via a seed (only for testing the implementation):
     - np.random.seed(1)
     - tf.random.set_seed(1)
     - random.seed(1)
