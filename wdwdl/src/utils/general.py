@@ -74,6 +74,19 @@ def llprint(message):
     sys.stdout.flush()
 
 
+def ams_grad():
+    """
+    Variant of Adam algorithm
+    Ensures non-increasing step size
+
+    See paper the following paper for more details:
+    "On the Convergence of Adam and beyond" from Reddi et al. (2019).
+
+    :return:
+    """
+    return tf.keras.optimizers.Adam(amsgrad=True)
+
+
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
         return True

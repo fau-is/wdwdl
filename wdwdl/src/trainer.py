@@ -185,7 +185,8 @@ def find_best_model(trial):
 
     model = tf.keras.models.Model(inputs=[input_layer], outputs=[output])
 
-    model.compile(loss={'output': 'categorical_crossentropy'}, optimizer='adam',
+    model.compile(loss={'output': 'categorical_crossentropy'},
+                  optimizer=trial.suggest_categorical('optimizer', args.hpopt_optimizer),
                   metrics=['accuracy', metric.f1_score])
     early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=25)
     model_checkpoint = tf.keras.callbacks.ModelCheckpoint(

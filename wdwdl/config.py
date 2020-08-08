@@ -1,6 +1,6 @@
 import os
 import argparse
-import wdwdl.src.utils.general as utils
+import wdwdl.src.utils.general as general
 
 
 def load():
@@ -23,21 +23,20 @@ def load():
     parser.add_argument('--batch_size_test', default=1, type=int)
 
     # Evaluation
-    parser.add_argument('--seed', default=True, type=utils.str2bool)
+    parser.add_argument('--seed', default=True, type=general.str2bool)
     parser.add_argument('--seed_val', default=1377, type=int)
 
     # Note cross validation is not implemented; only split validation
     parser.add_argument('--num_folds', default=3, type=int)  # 10
-    parser.add_argument('--cross_validation', default=False, type=utils.str2bool)
+    parser.add_argument('--cross_validation', default=False, type=general.str2bool)
     parser.add_argument('--split_rate_test', default=0.7, type=float)
 
     # Hyper-parameter optimization
-    parser.add_argument('--hpopt', default=True, type=utils.str2bool)
-    parser.add_argument('--hpopt_eval_runs', default=1, type=int)
+    parser.add_argument('--hpopt', default=True, type=general.str2bool)
+    parser.add_argument('--hpopt_eval_runs', default=3, type=int)
     parser.add_argument('--split_rate_test_hpopt', default=0.1, type=float)  # size of validation set in hpo
 
-    # parser.add_argument('--hpopt_optimizers', default=['nadam', 'adam', 'sgd', 'rmsprop', 'adadelta', 'adagrad'], type=list)
-    parser.add_argument('--hpopt_optimizers', default=['nadam', 'adam', 'rmsprop'], type=list)
+    parser.add_argument('--hpopt_optimizer', default=['adam', 'nadam', general.ams_grad()], type=list)
     parser.add_argument('--hpopt_activation', default=['linear', 'tanh', 'relu', 'elu'], type=list)
     parser.add_argument('--hpopt_filters', default=[128, 64, 32], type=list)
     parser.add_argument('--hpopt_kernels_size', default=[32, 16, 8], type=list)
