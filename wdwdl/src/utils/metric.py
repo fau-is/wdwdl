@@ -31,7 +31,7 @@ def calculate_and_print_output(label_ground_truth, label_ground_truth_one_hot, l
     general.llprint("Auc-roc: %f\n" % multi_class_roc_auc_score(label_ground_truth_one_hot, prob_dist))
 
 
-def multi_class_roc_auc_score(ground_truth_one_hot, prob_dist, average='weighted', multi_class='ovr'):
+def multi_class_roc_auc_score(ground_truth_one_hot, prob_dist, average='macro', multi_class='ovr'):
     """
     Calculate roc_auc_score
 
@@ -49,6 +49,7 @@ def multi_class_roc_auc_score(ground_truth_one_hot, prob_dist, average='weighted
     :param average:
     :return:
     """
+    print(0)
 
     return sklearn.metrics.roc_auc_score(ground_truth_one_hot, prob_dist, average=average, multi_class=multi_class)
 
