@@ -11,11 +11,15 @@
 5. Apply the CNN model on the prediction set including noise (10%)
 
 ## Setting
-1. Binary encoded categorical attributes (less sparse than one-hot encoding)
-2. Regarding the AE, we do not perform a hyper-parameter optimization; threshold not optimized 
-3. -
-4. Split validation + hyper-parameter optimisation (TPE)
-5. -
+- Metrics: accuracy (weighted), precision (weighted), recall (weighted) and auc_roc (macro)
+- Encoding: binary encoded categorical attributes (less sparse than one-hot encoding)
+- HPO
+    - Not for AE + threshold not optimized 
+    - For CNN via TPE
+- Shuffling:
+    - For data set splits: yes
+    - For instances in epochs: no
+- Seed: no
 
 ## Further details
 - For both models (i.e. AE and CNN), we do not shuffle the instances per epoch.
