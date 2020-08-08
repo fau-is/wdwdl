@@ -19,7 +19,7 @@ def train_nn_wa_classification(args, data_set, label, preprocessor):
     if args.hpopt:
         hpopt.create_data(data_set, label, preprocessor, args)
 
-        sampler = optuna.samplers.TPESampler(seed=10)  # Make the sampler behave in a deterministic way.
+        sampler = optuna.samplers.TPESampler(seed=0)  # Make the sampler behave in a deterministic way.
         study = optuna.create_study(direction='maximize', sampler=sampler)
         study.optimize(find_best_model, n_trials=args.hpopt_eval_runs)
         print("Number of finished trials: {}".format(len(study.trials)))
@@ -189,7 +189,8 @@ def find_best_model(trial):
         '%sclf_wa_mapping_trial%s.h5' % (args.checkpoint_dir, trial.number),
         monitor='val_loss',
         verbose=0,
-        save_weights_only=False,  # save_best_only=True,
+        save_best_only=True,
+        save_weights_only=False,
         mode='auto')
 
     lr_reducer = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=10, verbose=0,
@@ -197,7 +198,8 @@ def find_best_model(trial):
                                                       min_delta=0.0001, cooldown=0, min_lr=0)
     model.summary()
     model.fit(x_train, {'output': y_train}, validation_split=0.1, verbose=1,
-              callbacks=[early_stopping, model_checkpoint, lr_reducer], batch_size=args.batch_size_train,
+              callbacks=[early_stopping, model_checkpoint, lr_reducer],
+              batch_size=args.batch_size_train,
               epochs=args.dnn_num_epochs)
 
     score = model.evaluate(x_test, y_test, verbose=0)
@@ -297,11 +299,10 @@ def train_model(args, data_set, label, preprocessor):
     b1 = tf.keras.layers.Dense(100, activation='relu')(layer_6)
     """
 
-    output = tf.keras.layers.core.Dense(label.shape[1], activation='softmax', name='output',
+    output = tf.keras.layers.Dense(label.shape[1], activation='softmax', name='output',
                                         kernel_initializer='glorot_uniform')(b1)
     model = tf.keras.models.Model(inputs=[input_layer], outputs=[output])
 
-    # optimizer = tf.keras.optimizers.Nadam(lr=args.learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-8, schedule_decay=0.004, clipvalue=3)
     optimizer = tf.keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999)
 
     model.compile(loss={'output': 'categorical_crossentropy'}, optimizer=optimizer)

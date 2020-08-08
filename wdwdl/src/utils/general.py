@@ -4,6 +4,7 @@ import numpy as np
 import sklearn
 import os
 import tensorflow as tf
+import random
 
 
 output = {
@@ -33,6 +34,17 @@ class_names = ["No workaround",
                ]
 
 
+def set_seed(args):
+    """
+    Sets seed for reproducible results.
+    :param args: args.
+    :return: none.
+    """
+    np.random.seed(args.seed_val)
+    tf.random.set_seed(args.seed_val)
+    random.seed(args.seed_val)
+
+
 def train_test_ids_from_data_set(data_set, label, test_size):
     """
     Splits a data set into a train set and a test set.
@@ -41,7 +53,7 @@ def train_test_ids_from_data_set(data_set, label, test_size):
     :param test_size:
     :return: ids for train and test set.
     """
-    return sklearn.model_selection.train_test_split(data_set, label, test_size=test_size, random_state=0, shuffle=False)
+    return sklearn.model_selection.train_test_split(data_set, label, test_size=test_size, shuffle=True)
 
 
 def arg_max(list_):

@@ -5,8 +5,6 @@ from wdwdl.src.preprocessing.preprocessor import Preprocessor
 import wdwdl.src.utils.general as general
 import wdwdl.src.utils.plot as plot
 import wdwdl.src.utils.metric as metric
-import numpy as np
-import tensorflow as tf
 
 
 if __name__ == '__main__':
@@ -14,10 +12,11 @@ if __name__ == '__main__':
     args = config.load()
 
     # Delete encoders from previous experiments
-    # general.delete_encoders()
+    general.delete_encoders()
 
-    np.random.seed(0)
-    tf.random.set_seed(0)
+    # For reproducible results
+    if args.seed:
+        general.set_seed(args)
 
     # Init preprocessor
     preprocessor = Preprocessor(args)

@@ -49,7 +49,6 @@ def multi_class_roc_auc_score(ground_truth_one_hot, prob_dist, average='macro', 
     :param average:
     :return:
     """
-    print(0)
 
     return sklearn.metrics.roc_auc_score(ground_truth_one_hot, prob_dist, average=average, multi_class=multi_class)
 
