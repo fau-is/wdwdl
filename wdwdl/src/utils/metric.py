@@ -31,13 +31,17 @@ def calculate_and_print_output(label_ground_truth, label_ground_truth_one_hot, l
     general.llprint("Auc-roc: %f\n" % multi_class_roc_auc_score(label_ground_truth_one_hot, prob_dist))
 
 
-def multi_class_roc_auc_score(ground_truth_one_hot, prob_dist, average='weighted'):
+def multi_class_roc_auc_score(ground_truth_one_hot, prob_dist, average='weighted', multi_class='ovr'):
     """
     Calculate roc_auc_score
 
     https://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_auc_score.html
     Note: multi-class ROC AUC currently only handles the ‘macro’ and ‘weighted’ averages.
 
+    We calculate the ROC AUC according to:
+    Fawcett, T., 2006. An introduction to ROC analysis. Pattern Recognition Letters, 27(8), pp. 861-874.
+
+    :param multi_class:
     :param ground_truth_one_hot:
     :param prob_dist:
     :param ground_truth_label:
@@ -46,15 +50,7 @@ def multi_class_roc_auc_score(ground_truth_one_hot, prob_dist, average='weighted
     :return:
     """
 
-    # label_binarizer = sklearn.preprocessing.LabelBinarizer()
-    # label_binarizer.fit(ground_truth_label)
-
-    # ground_truth_label = label_binarizer.transform(ground_truth_label)
-    # predicted_label = label_binarizer.transform(predicted_label)
-
-    print(0)
-
-    return sklearn.metrics.roc_auc_score(ground_truth_one_hot, prob_dist, average=average)
+    return sklearn.metrics.roc_auc_score(ground_truth_one_hot, prob_dist, average=average, multi_class=multi_class)
 
 
 def f1_score(y_true, y_pred):

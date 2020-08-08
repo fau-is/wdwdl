@@ -1,17 +1,23 @@
 import wdwdl.config as config
-import wdwdl.predictor as predictor
-import wdwdl.trainer as trainer
+import wdwdl.src.predictor as predictor
+import wdwdl.src.trainer as trainer
 from wdwdl.src.preprocessing.preprocessor import Preprocessor
 import wdwdl.src.utils.general as general
 import wdwdl.src.utils.plot as plot
 import wdwdl.src.utils.metric as metric
+import numpy as np
+import tensorflow as tf
+
 
 if __name__ == '__main__':
 
     args = config.load()
 
     # Delete encoders from previous experiments
-    general.delete_encoders()
+    # general.delete_encoders()
+
+    np.random.seed(0)
+    tf.random.set_seed(0)
 
     # Init preprocessor
     preprocessor = Preprocessor(args)
@@ -25,7 +31,7 @@ if __name__ == '__main__':
     # Split data set
     data_set_train, data_set_test, label_train, label_test = general.train_test_ids_from_data_set(data_set, general.convert_label_to_categorical(label), 0.2)
     general.llprint("Number training instances: %i" % len(data_set_train))
-    general.llprint("Number test instances: %i" % len(data_set_test))
+    general.llprint("Number test instances: %i\n" % len(data_set_test))
 
     # Train model
     best_model_id = trainer.train_nn_wa_classification(args, data_set_train, label_train, preprocessor)

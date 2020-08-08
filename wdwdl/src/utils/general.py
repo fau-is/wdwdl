@@ -41,20 +41,7 @@ def train_test_ids_from_data_set(data_set, label, test_size):
     :param test_size:
     :return: ids for train and test set.
     """
-    return sklearn.model_selection.train_test_split(data_set, label, test_size=test_size, random_state=0)
-
-
-def one_hot_encode(list_):
-    """
-    ...
-    :param list_:
-    :return:
-    """
-
-    b = np.zeros_like(list_)
-    b[np.arange(len(list_)), list_.argmax(1)] = 1
-
-    return b
+    return sklearn.model_selection.train_test_split(data_set, label, test_size=test_size, random_state=0, shuffle=False)
 
 
 def arg_max(list_):
