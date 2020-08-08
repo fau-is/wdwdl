@@ -19,7 +19,10 @@ def train_nn_wa_classification(args, data_set, label, preprocessor):
     if args.hpopt:
         hpopt.create_data(data_set, label, preprocessor, args)
 
-        sampler = optuna.samplers.TPESampler(seed=0)  # Make the sampler behave in a deterministic way.
+        if args.seed:
+            sampler = optuna.samplers.TPESampler(seed=args.seed_val)  # Make the sampler behave in a deterministic way.
+        else:
+            sampler = optuna.samplers.TPESampler()
         study = optuna.create_study(direction='maximize', sampler=sampler)
         study.optimize(find_best_model, n_trials=args.hpopt_eval_runs)
         print("Number of finished trials: {}".format(len(study.trials)))
@@ -200,6 +203,7 @@ def find_best_model(trial):
     model.fit(x_train, {'output': y_train}, validation_split=0.1, verbose=1,
               callbacks=[early_stopping, model_checkpoint, lr_reducer],
               batch_size=args.batch_size_train,
+              shuffle=False,  # shuffle instances per epoch
               epochs=args.dnn_num_epochs)
 
     score = model.evaluate(x_test, y_test, verbose=0)

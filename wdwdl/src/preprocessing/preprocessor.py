@@ -637,7 +637,7 @@ class Preprocessor(object):
         history = autoencoder.fit(features_data, features_data,
                                   epochs=args.dnn_num_epochs_auto_encoder,
                                   batch_size=args.batch_size_train,
-                                  shuffle=False,
+                                  shuffle=False,  # shuffle instances per epoch
                                   validation_split=0.1,
                                   )
 
