@@ -38,7 +38,7 @@ if __name__ == '__main__':
     # Predict workarounds
     data_set_pred = preprocessor.prepare_event_log_for_prediction()
     general.llprint("Number prediction instances: %i\n" % len(data_set_pred))
-    predictions_ = predictor.apply_wa_classification(args, data_set_pred, preprocessor, best_model_id)
+    predictions_, prob_dist = predictor.apply_wa_classification(args, data_set_pred, preprocessor, best_model_id)
     general.llprint(str(predictor.get_prediction_frequency(predictions_)))
 
     # Delete encoders
