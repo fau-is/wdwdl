@@ -25,11 +25,11 @@ def reconstruction_error(args, df, col, threshold):
     data['reconstruction_error'] = df[col]
 
     # set visual setting
-    sns.set()
+    sns.set()  # style="white"
 
     # image size
     fig, axs = plt.subplots()
-    fig.set_size_inches(11.7, 8.27) # size of A4 paper
+    fig.set_size_inches(11.7, 8.27)  # size of A4 paper
 
     # create plot
     ax = sns.scatterplot(data=data,
@@ -41,7 +41,8 @@ def reconstruction_error(args, df, col, threshold):
                         )
 
     # threshold
-    ax.axhline(threshold, label="t = x", linewidth=0.75, color='black')
+    label = "t = " + str(round(threshold, 2))
+    ax.axhline(threshold, label=label, linewidth=1, color='black')
     ax.legend()
 
     # coordinate system
