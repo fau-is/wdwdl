@@ -29,8 +29,8 @@ if __name__ == '__main__':
     data_set, label = preprocessor.add_workarounds_to_event_log(args, no_outliers)
 
     # Split data set
-    data_set_train, data_set_test, label_train, label_test = general.train_test_ids_from_data_set(data_set, general.convert_label_to_categorical(label), 0.2)
-    general.llprint("Number training instances: %i" % len(data_set_train))
+    data_set_train, data_set_test, label_train, label_test = general.train_test_ids_from_data_set(args, data_set, general.convert_label_to_categorical(label), 0.2)
+    general.llprint("Number training instances: %i\n" % len(data_set_train))
     general.llprint("Number test instances: %i\n" % len(data_set_test))
 
     # Train model

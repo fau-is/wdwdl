@@ -20,7 +20,7 @@
 - Encoding: binary encoded categorical attributes (less sparse than one-hot encoding)
 - HPO
     - Not for AE + threshold not optimized 
-    - For CNN via TPE
+    - For CNN via a tree-structured parzen estimator approach (TPE) 
 - Shuffling:
     - For data set splits: yes
     - For instances in epochs: no

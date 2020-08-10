@@ -1,0 +1,54 @@
+Dataset: bpi2012w_converted_selection
+Best f1-score value: 0.7596
+Best params:
+filters_1: 32
+kernel_size_1: 32
+padding_1: causal
+activation_1: tanh
+kernel_initializer_1: glorot_normal
+filters_2: 64
+kernel_size_2: 32
+padding_2: same
+activation_2: tanh
+kernel_initializer_2: glorot_uniform
+conv_layers: 2
+units_dense: 150
+kernel_initializer_dense: glorot_normal
+activation_dense: tanh
+kernel_initializer_7: glorot_uniform
+optimizer: nadam
+
+Dataset: bpi2012w_converted_selection
+Best f1-score value: 0.7095
+Best params:
+filters_1: 128
+kernel_size_1: 16
+padding_1: causal
+activation_1: linear
+kernel_initializer_1: glorot_normal
+filters_2: 32
+kernel_size_2: 32
+padding_2: causal
+activation_2: linear
+kernel_initializer_2: glorot_normal
+conv_layers: 5
+filters_3: 32
+kernel_size_3: 16
+padding_3: causal
+activation_3: linear
+kernel_initializer_3: glorot_normal
+filters_4: 128
+kernel_size_4: 32
+padding_4: causal
+activation_4: linear
+kernel_initializer_4: glorot_uniform
+filters_5: 64
+kernel_size_5: 16
+padding_5: same
+activation_5: tanh
+kernel_initializer_5: glorot_uniform
+units_dense: 50
+kernel_initializer_dense: glorot_normal
+activation_dense: tanh
+kernel_initializer_7: glorot_normal
+optimizer: <tensorflow.python.keras.optimizer_v2.adam.Adam object at 0x00000266A5743DA0>

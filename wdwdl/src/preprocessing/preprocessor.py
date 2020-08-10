@@ -91,7 +91,7 @@ class Preprocessor(object):
         eventlog_df = self.encode_eventlog(args, eventlog_df, "init")
         self.set_number_control_flow_attributes()
 
-        self.get_sequences_from_encoded_eventlog(eventlog_df)
+        self.get_sequences_from_encoded_eventlog(args, eventlog_df)
 
         end_marked_process_instances = []
         for process_instance in self.data_structure['data']['process_instances']:
@@ -356,7 +356,7 @@ class Preprocessor(object):
             self.add_data_to_data_structure(context_attributes_process_instance_raw,
                                             'context_attributes_process_instances_raw')
 
-    def get_sequences_from_encoded_eventlog(self, eventlog_df):
+    def get_sequences_from_encoded_eventlog(self, args, eventlog_df):
 
         id_latest_process_instance = ''
         process_instance = ''
@@ -407,7 +407,7 @@ class Preprocessor(object):
 
             # get ides for data and prediction set
             ids_data_set, ids_pred_set, _, _ = \
-                general.train_test_ids_from_data_set(self.data_structure["data"]["ids_process_instances"], self.data_structure["data"]["ids_process_instances"], 0.1)
+                general.train_test_ids_from_data_set(args, self.data_structure["data"]["ids_process_instances"], self.data_structure["data"]["ids_process_instances"], 0.1)
 
             # get data for pred set
             self.data_structure["data"]["predict"]["process_instances"] = [self.data_structure["data"]["process_instances"][index] for index in range(len(self.data_structure["data"]["process_instances"])) if index in ids_pred_set]
@@ -570,7 +570,12 @@ class Preprocessor(object):
         df_error = pandas.DataFrame({'reconstruction_error': mse}, index=[i for i in range(features_data.shape[0])])
 
         threshold = df_error['reconstruction_error'].median() + (df_error['reconstruction_error'].std())
-        no_outliers = df_error.index[df_error['reconstruction_error'] <= threshold].tolist()  # < 0.0005
+
+        if args.remove_noise:
+            no_outliers = df_error.index[df_error['reconstruction_error'] <= threshold].tolist()
+        else:
+            no_outliers = df_error.index[df_error['reconstruction_error'] > 0].tolist()
+
         general.llprint("Number of outliers: %i\n" % (len(features_data) - len(no_outliers)))
         general.llprint("Number of no outliers: %i\n" % len(no_outliers))
 
@@ -578,7 +583,6 @@ class Preprocessor(object):
             plot.reconstruction_error(args, df_error, 'reconstruction_error', threshold)
 
         return no_outliers
-
 
     def add_workarounds_to_event_log(self, args, no_outliers):
         """
@@ -757,7 +761,7 @@ class Preprocessor(object):
         self.data_structure['data']['context_attributes_process_instances'] = []
 
         # From event-based pandas data frame to instance-based
-        self.get_sequences_from_encoded_eventlog(data_set_df)
+        self.get_sequences_from_encoded_eventlog(args, data_set_df)
 
         # Update of data structure
         # Num_values_context will be automatically set based on encode_eventlog and length of event ids

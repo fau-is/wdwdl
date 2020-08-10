@@ -7,7 +7,6 @@ import tensorflow as tf
 
 
 def train_ae_noise_removing(args, features_data):
-
     input_dimension = features_data.shape[1]
     encoding_dimension = 128
 
@@ -24,11 +23,11 @@ def train_ae_noise_removing(args, features_data):
     autoencoder.compile(optimizer='adam', loss='mse')
 
     autoencoder.fit(features_data, features_data,
-                              epochs=args.dnn_num_epochs_auto_encoder,
-                              batch_size=args.batch_size_train,
-                              shuffle=False,  # shuffle instances per epoch
-                              validation_split=0.1,
-                              )
+                    epochs=args.dnn_num_epochs_auto_encoder,
+                    batch_size=args.batch_size_train,
+                    shuffle=args.shuffle,  # shuffle instances per epoch
+                    validation_split=0.1,
+                    )
 
     return autoencoder
 
@@ -42,7 +41,6 @@ def train_nn_wa_classification(args, data_set, label, preprocessor):
     :param preprocessor:
     :return:
     """
-
 
     if args.hpopt:
         hpopt.create_data(data_set, label, preprocessor, args)
@@ -272,7 +270,7 @@ def find_best_model(trial):
     model.fit(x_train, {'output': y_train}, validation_split=0.1, verbose=1,
               callbacks=[early_stopping, model_checkpoint, lr_reducer],
               batch_size=args.batch_size_train,
-              shuffle=False,  # shuffle instances per epoch
+              shuffle=args.shuffle,  # shuffle instances per epoch
               epochs=args.dnn_num_epochs)
 
     score = model.evaluate(x_test, y_test, verbose=0)
@@ -373,7 +371,7 @@ def train_model(args, data_set, label, preprocessor):
     """
 
     output = tf.keras.layers.Dense(label.shape[1], activation='softmax', name='output',
-                                        kernel_initializer='glorot_uniform')(b1)
+                                   kernel_initializer='glorot_uniform')(b1)
     model = tf.keras.models.Model(inputs=[input_layer], outputs=[output])
 
     optimizer = tf.keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999)

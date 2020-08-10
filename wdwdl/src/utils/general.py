@@ -30,15 +30,16 @@ def set_seed(args):
     random.seed(args.seed_val)
 
 
-def train_test_ids_from_data_set(data_set, label, test_size):
+def train_test_ids_from_data_set(args, data_set, label, test_size):
     """
     Splits a data set into a train set and a test set.
+    :param args:
     :param data_set:
     :param label:
     :param test_size:
     :return: ids for train and test set.
     """
-    return sklearn.model_selection.train_test_split(data_set, label, test_size=test_size, shuffle=True)
+    return sklearn.model_selection.train_test_split(data_set, label, test_size=test_size, shuffle=args.shuffle)
 
 
 def arg_max(list_):
@@ -94,7 +95,7 @@ def clear_file(args, file_type):
     else:
         file = open('%s%s_%s.csv' % (args.result_dir, file_type, args.data_set[:-4]), "w+")
         if file_type == "metrics":
-            file.write("Dataset; accuracy; f1_score; precision; recall; auc_roc")
+            file.write("Dataset; accuracy; f1_score; precision; recall; auc_roc; runs; shuffle")
         file.close()
 
 
@@ -107,7 +108,10 @@ def add_to_file(args, file_type, input_):
                    str(input_["f1_score"][-1]) + ";" +
                    str(input_["precision"][-1]) + ";" +
                    str(input_["recall"][-1]) + ";" +
-                   str(input_["auc_roc"][-1]))
+                   str(input_["auc_roc"][-1]) + ";" +
+                   str(args.runs) + ";" +
+                   str(args.shuffle)
+                   )
 
     elif file_type == "hyper_params":
 

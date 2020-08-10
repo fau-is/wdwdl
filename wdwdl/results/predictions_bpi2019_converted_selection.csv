@@ -1,0 +1,12 @@
+Dataset: bpi2019_converted_selection
+Predictions: [{0: 825}, {1: 1}, {3: 11}, {4: 6}, {5: 17}, {6: 14}, {7: 5}]
+Dataset: bpi2019_converted_selection
+Predictions: [{0: 817}, {1: 1}, {3: 37}, {4: 1}, {5: 10}, {6: 13}]
+Dataset: bpi2019_converted_selection
+Predictions: [{0: 845}, {1: 2}, {3: 2}, {4: 1}, {5: 3}, {6: 23}, {7: 3}]
+Dataset: bpi2019_converted_selection
+Predictions: [{0: 815}, {1: 8}, {2: 4}, {3: 17}, {4: 3}, {5: 5}, {6: 22}, {7: 5}]
+Dataset: bpi2019_converted_selection
+Predictions: [{0: 826}, {2: 1}, {3: 14}, {5: 6}, {6: 29}, {7: 3}]
+Dataset: bpi2019_converted_selection
+Predictions: [{0: 820}, {1: 1}, {2: 1}, {3: 26}, {4: 2}, {5: 11}, {6: 15}, {7: 3}]

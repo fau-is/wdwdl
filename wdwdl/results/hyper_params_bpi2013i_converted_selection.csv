@@ -1,0 +1,19 @@
+Dataset: bpi2013i_converted_selection
+Best f1-score value: 0.8003
+Best params:
+filters_1: 128
+kernel_size_1: 32
+padding_1: causal
+activation_1: linear
+kernel_initializer_1: glorot_uniform
+filters_2: 64
+kernel_size_2: 16
+padding_2: same
+activation_2: tanh
+kernel_initializer_2: glorot_normal
+conv_layers: 2
+units_dense: 50
+kernel_initializer_dense: glorot_uniform
+activation_dense: tanh
+kernel_initializer_7: glorot_uniform
+optimizer: adam
