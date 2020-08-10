@@ -26,7 +26,7 @@ def load():
     parser.add_argument('--seed', default=True, type=general.str2bool)
     parser.add_argument('--seed_val', default=1377, type=int)
     parser.add_argument('--shuffle', default=True, type=int)
-    parser.add_argument('--remove_noise', default=True, type=int)
+    parser.add_argument('--remove_noise', default=False, type=int)
     parser.add_argument('--hpopt', default=True, type=general.str2bool)  # Hyper-parameter optimization
     parser.add_argument('--hpopt_eval_runs', default=10, type=int)
     parser.add_argument('--split_rate_test_hpopt', default=0.1, type=float)  # size of validation set in hpo

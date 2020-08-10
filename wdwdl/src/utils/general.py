@@ -95,7 +95,7 @@ def clear_file(args, file_type):
     else:
         file = open('%s%s_%s.csv' % (args.result_dir, file_type, args.data_set[:-4]), "w+")
         if file_type == "metrics":
-            file.write("Dataset; accuracy; f1_score; precision; recall; auc_roc; runs; shuffle")
+            file.write("Dataset; accuracy; f1_score; precision; recall; auc_roc; runs; shuffle; remove_noise")
         file.close()
 
 
@@ -109,8 +109,9 @@ def add_to_file(args, file_type, input_):
                    str(input_["precision"][-1]) + ";" +
                    str(input_["recall"][-1]) + ";" +
                    str(input_["auc_roc"][-1]) + ";" +
-                   str(args.runs) + ";" +
-                   str(args.shuffle)
+                   str(args.hpopt_eval_runs) + ";" +
+                   str(args.shuffle) + ";" +
+                   str(args.remove_noise)
                    )
 
     elif file_type == "hyper_params":

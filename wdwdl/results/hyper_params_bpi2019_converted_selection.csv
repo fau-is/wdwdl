@@ -172,3 +172,28 @@ kernel_initializer_dense: glorot_normal
 activation_dense: linear
 kernel_initializer_7: glorot_uniform
 optimizer: nadam
+
+Dataset: bpi2019_converted_selection
+Best f1-score value: 0.8936
+Best params:
+filters_1: 256
+kernel_size_1: 8
+padding_1: causal
+activation_1: relu
+kernel_initializer_1: glorot_normal
+filters_2: 32
+kernel_size_2: 16
+padding_2: same
+activation_2: tanh
+kernel_initializer_2: glorot_normal
+conv_layers: 3
+filters_3: 32
+kernel_size_3: 64
+padding_3: causal
+activation_3: relu
+kernel_initializer_3: glorot_normal
+units_dense: 150
+kernel_initializer_dense: glorot_normal
+activation_dense: linear
+kernel_initializer_7: glorot_normal
+optimizer: nadam
