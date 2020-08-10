@@ -98,7 +98,6 @@ def clear_file(args, file_type):
         file.close()
 
 
-
 def add_to_file(args, file_type, input_):
     file = open('%s%s_%s.csv' % (args.result_dir, file_type, args.data_set[:-4]), "a+")
     if file_type == "metrics":
@@ -115,17 +114,20 @@ def add_to_file(args, file_type, input_):
         if os.stat('%s%s_%s.csv' % (args.result_dir, file_type, args.data_set[:-4])).st_size != 0:
             file.write("\n")
 
-        file.write(str(args.data_set[:-4]) + "\n")
-        file.write("Value: " + str(round(input_.value, 4)) + "\n")
-        file.write("Params:\n")
+        file.write("Dataset: " + str(args.data_set[:-4]) + "\n")
+        file.write("Best f1-score value: " + str(round(input_.value, 4)) + "\n")
+        file.write("Best params:\n")
 
         for key, value in input_.params.items():
             file.write("%s: %s\n" % (str(key), str(value)))
 
-
-
     elif file_type == "predictions":
-        pass
+
+        if os.stat('%s%s_%s.csv' % (args.result_dir, file_type, args.data_set[:-4])).st_size != 0:
+            file.write("\n")
+
+        file.write("Dataset: " + str(args.data_set[:-4]) + "\n")
+        file.write("Predictions: " + str(input_))
 
     file.close()
 
