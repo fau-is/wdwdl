@@ -184,12 +184,10 @@ class Preprocessor(object):
 
         mode = utils.get_encoding_mode(args, column_data_type)
 
-
-
         if mode == 'min_max_norm':
             encoded_column = self.apply_min_max_normalization(attribute_name)
 
-        elif mode == 'bin' or mode == 'onehot':
+        elif mode == 'bin':
             if logic == "init":
                 encoded_column = self.create_encoder(attribute_type, attribute_name, mode)
             else:
@@ -246,11 +244,7 @@ class Preprocessor(object):
         if attribute_type == 'event':
             dataframe = self.add_end_mark_to_event_column(column_name)
 
-        if mode == 'bin':
-            encoder = category_encoders.BinaryEncoder(cols=[column_name])
-        # onehot
-        else:
-            encoder = category_encoders.OneHotEncoder(cols=[column_name])
+        encoder = category_encoders.BinaryEncoder(cols=[column_name])
         encoded_df = encoder.fit_transform(dataframe)
 
         # save encoder
