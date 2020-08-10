@@ -17,16 +17,16 @@ def load():
 
     # Training
     parser.add_argument('--task', default="workaround_detection")
-    parser.add_argument('--dnn_num_epochs', default=1, type=int)
-    parser.add_argument('--dnn_num_epochs_auto_encoder', default=1, type=int)
-    parser.add_argument('--batch_size_train', default=128, type=int)  # higher batch size lead to sharp minima
+    parser.add_argument('--dnn_num_epochs', default=100, type=int)
+    parser.add_argument('--dnn_num_epochs_auto_encoder', default=100, type=int)
+    parser.add_argument('--batch_size_train', default=256, type=int)  # higher batch size lead to sharp minima
     parser.add_argument('--batch_size_test', default=1, type=int)
 
     # Evaluation
     parser.add_argument('--seed', default=True, type=general.str2bool)
     parser.add_argument('--seed_val', default=1377, type=int)
     parser.add_argument('--hpopt', default=True, type=general.str2bool)  # Hyper-parameter optimization
-    parser.add_argument('--hpopt_eval_runs', default=1, type=int)
+    parser.add_argument('--hpopt_eval_runs', default=10, type=int)
     parser.add_argument('--split_rate_test_hpopt', default=0.1, type=float)  # size of validation set in hpo
     parser.add_argument('--hpopt_optimizer', default=['adam', 'nadam', general.ams_grad()], type=list)  # hyper-parameters
     parser.add_argument('--hpopt_activation', default=['linear', 'tanh', 'relu'], type=list)
