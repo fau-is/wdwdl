@@ -13,7 +13,7 @@ def load():
     parser.add_argument('--result_dir', default="./results/")
     parser.add_argument('--encoding_num', default="min_max_norm", type=str)  # for numerical attributes min-max norm
     parser.add_argument('--encoding_cat', default="bin", type=str)  # for categorical attributes binary encoding
-    parser.add_argument('--verbose', default=False, type=general.str2bool)
+    parser.add_argument('--verbose', default=True, type=general.str2bool)
 
     # Training
     parser.add_argument('--task', default="workaround_detection")
@@ -25,8 +25,9 @@ def load():
     # Evaluation
     parser.add_argument('--seed', default=True, type=general.str2bool)
     parser.add_argument('--seed_val', default=1377, type=int)
-    parser.add_argument('--shuffle', default=True, type=int)
+    parser.add_argument('--shuffle', default=False, type=int)
     parser.add_argument('--remove_noise', default=False, type=int)
+    parser.add_argument('--remove_noise_factor', default=0.1, type=float)
     parser.add_argument('--hpopt', default=True, type=general.str2bool)  # Hyper-parameter optimization
     parser.add_argument('--hpopt_eval_runs', default=10, type=int)
     parser.add_argument('--split_rate_test_hpopt', default=0.1, type=float)  # size of validation set in hpo

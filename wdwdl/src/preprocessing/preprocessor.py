@@ -569,7 +569,7 @@ class Preprocessor(object):
         mse = numpy.mean(numpy.power(features_data - predictions, 2), axis=1)
         df_error = pandas.DataFrame({'reconstruction_error': mse}, index=[i for i in range(features_data.shape[0])])
 
-        threshold = df_error['reconstruction_error'].median() + (df_error['reconstruction_error'].std())
+        threshold = df_error['reconstruction_error'].median() + (df_error['reconstruction_error'].std() * args.remove_noise_factor)
 
         if args.remove_noise:
             no_outliers = df_error.index[df_error['reconstruction_error'] <= threshold].tolist()
