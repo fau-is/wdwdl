@@ -9,33 +9,55 @@ import matplotlib.pyplot as pyplot
 import wdwdl.src.utils.general as general
 
 
-def reconstruction_error(df, col):
+def reconstruction_error(args, df, col, threshold):
     """
     Plots the reconstruction error.
+    :param args:
     :param df:
     :param col:
+    :param threshold:
     :return:
     """
 
-    x = df.index.tolist()
-    y = df[col].tolist()
+    # data
+    data = pandas.DataFrame()
+    data['process_instance'] = df.index
+    data['reconstruction_error'] = df[col]
 
-    trace = {'type': 'scatter',
-             'x': x,
-             'y': y,
-             'mode': 'markers'
-             # 'marker': {'colorscale': 'red', 'opacity': 0.5}
-             }
-    data = plotly.graph_objs.Data([trace])
-    layout = {'title': 'Reconstruction error for each process instance',
-              'titlefont': {'size': 30},
-              'xaxis': {'title': 'Process instance', 'titlefont': {'size': 20}},
-              'yaxis': {'title': 'Reconstruction error', 'titlefont': {'size': 20}},
-              'hovermode': 'closest'
-              }
-    figure = plotly.graph_objs.Figure(data=data, layout=layout)
+    # set visual setting
+    sns.set()
 
-    return figure
+    # image size
+    fig, axs = plt.subplots()
+    fig.set_size_inches(11.7, 8.27) # size of A4 paper
+
+    # create plot
+    ax = sns.scatterplot(data=data,
+                         x='process_instance', y='reconstruction_error',
+                         facecolor='darkred',
+                         edgecolor='none',
+                         alpha=0.5,     # marker opacity
+                         s=5,           # marker size
+                        )
+
+    # threshold
+    ax.axhline(threshold, label="t = x", linewidth=0.75, color='black')
+    ax.legend()
+
+    # coordinate system
+    ratio = 0.6
+    ax.set_aspect(1.0 / ax.get_data_ratio() * ratio)
+    plt.grid(linewidth=0.5)
+    plt.xticks(np.arange(0, max(df.index.tolist()), step=1000))
+
+    # text
+    plt.title('Reconstruction Error for Each Process Instance', fontweight='bold', fontsize=14, pad=20)
+    plt.xlabel("Process Instance", fontstyle='oblique', labelpad=20)
+    plt.ylabel("Reconstruction Error", fontstyle='oblique', labelpad=20)
+
+    # save and display
+    plt.savefig('results/noise_' + args.data_set[:-4] + '.pdf')
+    plt.show()
 
 
 def learning_curve(history, learning_epochs):

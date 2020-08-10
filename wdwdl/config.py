@@ -12,7 +12,7 @@ def load():
     parser.add_argument('--checkpoint_dir', default="./checkpoints/")
     parser.add_argument('--result_dir', default="./results/")
     parser.add_argument('--encoding_num', default="min_max_norm", type=str)  # for numerical attributes min-max norm
-    parser.add_argument('--encoding_cat', default="bin", type=str)  # for categorical attributes binary encoding; note one-hot encoding of the categorical attributes can lead to memory errors
+    parser.add_argument('--encoding_cat', default="bin", type=str)  # for categorical attributes binary encoding
     parser.add_argument('--verbose', default=False, type=general.str2bool)
 
     # Training

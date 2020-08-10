@@ -184,12 +184,10 @@ class Preprocessor(object):
 
         mode = utils.get_encoding_mode(args, column_data_type)
 
-
-
         if mode == 'min_max_norm':
             encoded_column = self.apply_min_max_normalization(attribute_name)
 
-        elif mode == 'bin' or mode == 'onehot':
+        elif mode == 'bin':
             if logic == "init":
                 encoded_column = self.create_encoder(attribute_type, attribute_name, mode)
             else:
@@ -246,11 +244,7 @@ class Preprocessor(object):
         if attribute_type == 'event':
             dataframe = self.add_end_mark_to_event_column(column_name)
 
-        if mode == 'bin':
-            encoder = category_encoders.BinaryEncoder(cols=[column_name])
-        # onehot
-        else:
-            encoder = category_encoders.OneHotEncoder(cols=[column_name])
+        encoder = category_encoders.BinaryEncoder(cols=[column_name])
         encoded_df = encoder.fit_transform(dataframe)
 
         # save encoder
@@ -575,14 +569,13 @@ class Preprocessor(object):
         mse = numpy.mean(numpy.power(features_data - predictions, 2), axis=1)
         df_error = pandas.DataFrame({'reconstruction_error': mse}, index=[i for i in range(features_data.shape[0])])
 
-        if args.verbose:
-            plot_error = plot.reconstruction_error(df_error, 'reconstruction_error')
-            print(plotly.offline.plot(plot_error))
-
         threshold = df_error['reconstruction_error'].median() + (df_error['reconstruction_error'].std())
         no_outliers = df_error.index[df_error['reconstruction_error'] <= threshold].tolist()  # < 0.0005
         general.llprint("Number of outliers: %i\n" % (len(features_data) - len(no_outliers)))
         general.llprint("Number of no outliers: %i\n" % len(no_outliers))
+
+        if args.verbose:
+            plot.reconstruction_error(args, df_error, 'reconstruction_error', threshold)
 
         return no_outliers
 
