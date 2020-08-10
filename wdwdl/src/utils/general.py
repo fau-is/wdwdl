@@ -94,23 +94,36 @@ def clear_file(args, file_type):
     else:
         file = open('%s%s_%s.csv' % (args.result_dir, file_type, args.data_set[:-4]), "w+")
         if file_type == "metrics":
-            file.write("Accuracy; f1_score; precision; recall; auc_roc")
+            file.write("Dataset; accuracy; f1_score; precision; recall; auc_roc")
         file.close()
 
 
 
-def add_to_file(args, file_type, input_, aggregate=False):
+def add_to_file(args, file_type, input_):
     file = open('%s%s_%s.csv' % (args.result_dir, file_type, args.data_set[:-4]), "a+")
     if file_type == "metrics":
 
-        file.write("\n" + str(input_["accuracy"][-1]) + ";" +
+        file.write("\n" + args.data_set[:-4] + ";" +
+                   str(input_["accuracy"][-1]) + ";" +
                    str(input_["f1_score"][-1]) + ";" +
                    str(input_["precision"][-1]) + ";" +
                    str(input_["recall"][-1]) + ";" +
                    str(input_["auc_roc"][-1]))
 
     elif file_type == "hyper_params":
-        pass
+
+        if os.stat('%s%s_%s.csv' % (args.result_dir, file_type, args.data_set[:-4])).st_size != 0:
+            file.write("\n")
+
+        file.write(str(args.data_set[:-4]) + "\n")
+        file.write("Value: " + str(round(input_.value, 4)) + "\n")
+        file.write("Params:\n")
+
+        for key, value in input_.params.items():
+            file.write("%s: %s\n" % (str(key), str(value)))
+
+
+
     elif file_type == "predictions":
         pass
 

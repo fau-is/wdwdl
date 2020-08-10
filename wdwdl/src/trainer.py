@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 import wdwdl.src.hyperparameter_optimization as hpopt
 import wdwdl.src.utils.metric as metric
+import wdwdl.src.utils.general as general
 import optuna
 import tensorflow as tf
 
@@ -52,6 +53,7 @@ def train_nn_wa_classification(args, data_set, label, preprocessor):
             sampler = optuna.samplers.TPESampler()
         study = optuna.create_study(direction='maximize', sampler=sampler)
         study.optimize(find_best_model, n_trials=args.hpopt_eval_runs)
+
         print("Number of finished trials: {}".format(len(study.trials)))
         print("Best trial:")
         trial = study.best_trial
@@ -59,6 +61,8 @@ def train_nn_wa_classification(args, data_set, label, preprocessor):
         print("  Params: ")
         for key, value in trial.params.items():
             print("    {}: {}".format(key, value))
+
+        general.add_to_file(args, "hyper_params", trial)
 
         return study.best_trial.number
     else:
