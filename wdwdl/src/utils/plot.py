@@ -24,8 +24,14 @@ def reconstruction_error(args, df, col, threshold):
     data['process_instance'] = df.index
     data['reconstruction_error'] = df[col]
 
-    # set visual setting
-    sns.set()  # style="white"
+    # hue
+    hue_above = r'$e(pi_{i}) > t$'
+    hue_equal_below = r'$e(pi_{i}) \leq t$'
+    data['hue'] = np.where(df['reconstruction_error'] > threshold, hue_above, hue_equal_below)
+    hue_color_palette = {hue_above: 'darkred', hue_equal_below: 'grey'}
+
+    # set plot theme
+    sns.set(style="darkgrid")
 
     # image size
     fig, axs = plt.subplots()
@@ -34,16 +40,21 @@ def reconstruction_error(args, df, col, threshold):
     # create plot
     ax = sns.scatterplot(data=data,
                          x='process_instance', y='reconstruction_error',
-                         facecolor='darkred',
+                         hue=data['hue'],
+                         hue_order=[hue_above, hue_equal_below],
+                         palette=hue_color_palette,
                          edgecolor='none',
                          alpha=0.5,     # marker opacity
                          s=5,           # marker size
                         )
 
     # threshold
-    label = "t = " + str(round(threshold, 2))
+    label = r"$t = %s$" % str(round(threshold, 2))
     ax.axhline(threshold, label=label, linewidth=1, color='black')
-    ax.legend()
+
+    # legend
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles=[h for h in handles if handles.index(h) != 1]) # remove subtitle for hue entries from legend
 
     # coordinate system
     ratio = 0.6
@@ -53,8 +64,8 @@ def reconstruction_error(args, df, col, threshold):
 
     # text
     plt.title('Reconstruction Error for Each Process Instance', fontweight='bold', fontsize=14, pad=20)
-    plt.xlabel("Process Instance", fontstyle='oblique', labelpad=20)
-    plt.ylabel("Reconstruction Error", fontstyle='oblique', labelpad=20)
+    plt.xlabel("Process Instance  " + r'$pi_{i}$', labelpad=20)
+    plt.ylabel("Reconstruction Error  " + r'$e(pi_{i})$', labelpad=20)
 
     # save and display
     plt.savefig('results/noise_' + args.data_set[:-4] + '.pdf')
