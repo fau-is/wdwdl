@@ -22,8 +22,9 @@
     - Not for AE + threshold not optimized 
     - For CNN via a tree-structured parzen estimator approach (TPE) 
 - Shuffling:
-    - For data set splits: yes
-    - For instances in epochs: no
+    - For general data set split: no
+    - For hyper-parameter optimisation: no
+    - For instances per epoch (regarding both models): no
 - Seed: no
 
 ## Further details
