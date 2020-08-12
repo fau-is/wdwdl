@@ -18,6 +18,7 @@
     - accuracy (macro), precision (macro) and recall (macro) -> to not ignore workaround classes with fewer instances  
     - auc_roc (macro, according to Fawcett (2006))
 - Encoding: binary encoded categorical attributes (less sparse than one-hot encoding)
+- Validation: we use split validation not to distroy the natural order of instances (?) 
 - HPO
     - For AE via a tree-structured parzen estimator approach (TPE) (planed) 
     - For CNN via a tree-structured parzen estimator approach (TPE) 
@@ -26,7 +27,7 @@
     - For hyper-parameter optimisation: no
     - For validation per epoch (to perform early stopping): no
 - Seed: no
-- Threshold: median(error) + sd(errors)
+- Threshold: median(error) + sd(errors) (find an optimal threshold?)
 
 ## Further details
 - Ensuring reproducible results via a seed flag in config. Four seeds are set:
