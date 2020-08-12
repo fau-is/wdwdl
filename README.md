@@ -19,21 +19,21 @@
     - auc_roc (macro, according to Fawcett (2006))
 - Encoding: binary encoded categorical attributes (less sparse than one-hot encoding)
 - HPO
-    - Not for AE + threshold not optimized 
+    - For AE via a tree-structured parzen estimator approach (TPE) (planed) 
     - For CNN via a tree-structured parzen estimator approach (TPE) 
 - Shuffling:
     - For general data set split: no
     - For hyper-parameter optimisation: no
-    - For instances per epoch (regarding both models): no
+    - For validation per epoch (to perform early stopping): no
 - Seed: no
+- Threshold: median(error) + sd(errors)
 
 ## Further details
-- For both models (i.e. AE and CNN), we do not shuffle the instances per epoch.
-- Ensuring reproducible results via a seed (only for testing the implementation):
-    - np.random.seed(1)
-    - tf.random.set_seed(1)
-    - random.seed(1)
-    - optuna.samplers.TPESampler(1)
+- Ensuring reproducible results via a seed flag in config. Four seeds are set:
+    - np.random.seed(1377)
+    - tf.random.set_seed(1377)
+    - random.seed(1377)
+    - optuna.samplers.TPESampler(1377)
 
 
 ## Paper
