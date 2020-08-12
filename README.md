@@ -11,7 +11,7 @@
     - based on 80% of the data set
     - test model on 20% of the data set 
     - hyper-parameter optimization with a 10%-validation-set of the training set
-5. Apply the CNN model on the prediction set including noise (10%)
+5. Apply the CNN model on the prediction set (10%) including noise
 
 ## Setting
 - Metrics: 
