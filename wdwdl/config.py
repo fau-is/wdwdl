@@ -28,19 +28,19 @@ def load():
     parser.add_argument('--shuffle', default=False, type=int)
     parser.add_argument('--remove_noise', default=False, type=int)
     parser.add_argument('--remove_noise_factor', default=0.1, type=float)
-    parser.add_argument('--hpopt', default=True, type=general.str2bool)  # Hyper-parameter optimization dnn
-    parser.add_argument('--hpopt_ae', default=True, type=general.str2bool)  # Hyper-parameter optimization autoencoder
-    parser.add_argument('--hpopt_eval_runs', default=10, type=int)
-    parser.add_argument('--split_rate_test_hpopt', default=0.1, type=float)  # size of validation set in hpo
-    parser.add_argument('--hpopt_optimizer', default=['adam', 'nadam', general.ams_grad()], type=list)  # hyper-parameters
-    parser.add_argument('--hpopt_activation', default=['linear', 'tanh', 'relu'], type=list)
-    parser.add_argument('--hpopt_filters', default=[256, 128, 64, 32], type=list)
-    parser.add_argument('--hpopt_kernels_size', default=[64, 32, 16, 8], type=list)
-    parser.add_argument('--hpopt_strides', default=[1], type=list)  # Stride = moving distance of filter in pixels/positions to right, often used values are 1 or 2; # We want to grasp all potential workarounds in event log data, thus we set stride = 1
-    parser.add_argument('--hpopt_padding', default=["same", "causal"], type=list)  # not 'valid'
-    parser.add_argument('--hpopt_kernel_initializer', default=['glorot_normal', 'glorot_uniform'], type=list)
-    parser.add_argument('--hpopt_units', default=[50, 100, 150], type=list)
-    parser.add_argument('--hpopt_conv_layers', default=[3, 4, 5], type=list)
+    parser.add_argument('--hpo', default=True, type=general.str2bool)  # Hyper-parameter optimization dnn
+    parser.add_argument('--hpo_ae', default=True, type=general.str2bool)  # Hyper-parameter optimization autoencoder
+    parser.add_argument('--hpo_eval_runs', default=10, type=int)
+    parser.add_argument('--split_rate_test_hpo', default=0.1, type=float)  # size of validation set in hpo
+    parser.add_argument('--hpo_optimizer', default=['adam', 'nadam', general.ams_grad()], type=list)  # hyper-parameters
+    parser.add_argument('--hpo_activation', default=['linear', 'tanh', 'relu'], type=list)
+    parser.add_argument('--hpo_filters', default=[256, 128, 64, 32], type=list)
+    parser.add_argument('--hpo_kernels_size', default=[64, 32, 16, 8], type=list)
+    parser.add_argument('--hpo_strides', default=[1], type=list)  # Stride = moving distance of filter in pixels/positions to right, often used values are 1 or 2; # We want to grasp all potential workarounds in event log data, thus we set stride = 1
+    parser.add_argument('--hpo_padding', default=["same", "causal"], type=list)  # not 'valid'
+    parser.add_argument('--hpo_kernel_initializer', default=['glorot_normal', 'glorot_uniform'], type=list)
+    parser.add_argument('--hpo_units', default=[50, 100, 150], type=list)
+    parser.add_argument('--hpo_conv_layers', default=[3, 4, 5], type=list)
 
     # Gpu processing
     parser.add_argument('--gpu_ratio', default=1.0, type=float)

@@ -1,5 +1,5 @@
 from __future__ import print_function, division
-import wdwdl.src.hyperparameter_optimization as hpopt
+import wdwdl.src.hyperparameter_optimization as hpo
 import wdwdl.src.utils.metric as metric
 import wdwdl.src.utils.general as general
 import optuna
@@ -9,15 +9,15 @@ import sklearn
 
 def train_ae_noise_removing(args, features_data, preprocessor):
 
-    if args.hpopt_ae:
-        hpopt.create_data(features_data, features_data, preprocessor, args, is_ae=True)
+    if args.hpo_ae:
+        hpo.create_data(features_data, features_data, preprocessor, args, is_ae=True)
 
         if args.seed:
             sampler = optuna.samplers.TPESampler(seed=args.seed_val)  # Make the sampler behave in a deterministic way.
         else:
             sampler = optuna.samplers.TPESampler()
         study = optuna.create_study(direction='minimize', sampler=sampler)
-        study.optimize(optimize_ae, n_trials=args.hpopt_eval_runs)
+        study.optimize(optimize_ae, n_trials=args.hpo_eval_runs)
 
         print("Number of finished trials: {}".format(len(study.trials)))
         print("Best trial:")
@@ -67,32 +67,32 @@ def train_ae_noise_removing(args, features_data, preprocessor):
 
 def optimize_ae(trial):
 
-    args = hpopt.args
-    x_train = hpopt.x_train
-    y_train = hpopt.y_train     # identical to x_train
-    x_test = hpopt.x_test
-    y_test = hpopt.y_test       # identical to x_test
+    args = hpo.args
+    x_train = hpo.x_train
+    y_train = hpo.y_train     # identical to x_train
+    x_test = hpo.x_test
+    y_test = hpo.y_test       # identical to x_test
 
     input_dimension = x_train.shape[1]
     encoding_dimension = 128
 
     input_layer = tf.keras.layers.Input(shape=(input_dimension,))
     encoder = tf.keras.layers.Dense(int(encoding_dimension),
-                                    activation=trial.suggest_categorical('activation_enc_1', args.hpopt_activation))(input_layer)
+                                    activation=trial.suggest_categorical('activation_enc_1', args.hpo_activation))(input_layer)
     encoder = tf.keras.layers.Dense(int(encoding_dimension / 2),
-                                    activation=trial.suggest_categorical('activation_enc_2', args.hpopt_activation))(encoder)
+                                    activation=trial.suggest_categorical('activation_enc_2', args.hpo_activation))(encoder)
     encoder = tf.keras.layers.Dense(int(encoding_dimension / 4),
-                                    activation=trial.suggest_categorical('activation_enc_3', args.hpopt_activation))(encoder)
+                                    activation=trial.suggest_categorical('activation_enc_3', args.hpo_activation))(encoder)
     decoder = tf.keras.layers.Dense(int(encoding_dimension / 2),
-                                    activation=trial.suggest_categorical('activation_dec_1', args.hpopt_activation))(encoder)
+                                    activation=trial.suggest_categorical('activation_dec_1', args.hpo_activation))(encoder)
     decoder = tf.keras.layers.Dense(int(encoding_dimension),
-                                    activation=trial.suggest_categorical('activation_dec_2', args.hpopt_activation))(decoder)
+                                    activation=trial.suggest_categorical('activation_dec_2', args.hpo_activation))(decoder)
     decoder = tf.keras.layers.Dense(input_dimension,
-                                    activation=trial.suggest_categorical('activation_dec_3', args.hpopt_activation))(decoder)
+                                    activation=trial.suggest_categorical('activation_dec_3', args.hpo_activation))(decoder)
 
     autoencoder = tf.keras.models.Model(inputs=input_layer, outputs=decoder)
     autoencoder.summary()
-    autoencoder.compile(optimizer=trial.suggest_categorical('optimizer', args.hpopt_optimizer), loss='mse')
+    autoencoder.compile(optimizer=trial.suggest_categorical('optimizer', args.hpo_optimizer), loss='mse')
 
     early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=25)
     model_checkpoint = tf.keras.callbacks.ModelCheckpoint('%sae_trial%s.h5' % (args.checkpoint_dir, trial.number),
@@ -128,15 +128,15 @@ def train_nn_wa_classification(args, data_set, label, preprocessor):
     :return:
     """
 
-    if args.hpopt:
-        hpopt.create_data(data_set, label, preprocessor, args)
+    if args.hpo:
+        hpo.create_data(data_set, label, preprocessor, args)
 
         if args.seed:
             sampler = optuna.samplers.TPESampler(seed=args.seed_val)  # Make the sampler behave in a deterministic way.
         else:
             sampler = optuna.samplers.TPESampler()
         study = optuna.create_study(direction='maximize', sampler=sampler)
-        study.optimize(find_best_model, n_trials=args.hpopt_eval_runs)
+        study.optimize(find_best_model, n_trials=args.hpo_eval_runs)
 
         print("Number of finished trials: {}".format(len(study.trials)))
         print("Best trial:")
@@ -155,18 +155,18 @@ def train_nn_wa_classification(args, data_set, label, preprocessor):
 
 
 def find_best_model(trial):
-    args = hpopt.args
-    x_train = hpopt.x_train
-    y_train = hpopt.y_train
-    x_test = hpopt.x_test
-    y_test = hpopt.y_test
+    args = hpo.args
+    x_train = hpo.x_train
+    y_train = hpo.y_train
+    x_test = hpo.x_test
+    y_test = hpo.y_test
 
     """
     # 0.) test: perceptron
-    input_layer = tf.keras.layers.Input(shape=(hpopt.time_steps, hpopt.number_attributes), name='input_layer')
+    input_layer = tf.keras.layers.Input(shape=(hpo.time_steps, hpo.number_attributes), name='input_layer')
     input_layer_flattened = tf.keras.layers.Flatten()(input_layer)
 
-    layer_1 = tf.keras.layers.Dense(100, activation=trial.suggest_categorical("activation", args.hpopt_activation))(
+    layer_1 = tf.keras.layers.Dense(100, activation=trial.suggest_categorical("activation", args.hpo_activation))(
         input_layer_flattened)
     layer_2 = tf.keras.layers.Dropout(0.2)(layer_1)
     b1 = tf.keras.layers.Dropout(0.2)(layer_2)
@@ -228,94 +228,94 @@ def find_best_model(trial):
     """
 
     # CNN motivated by the architecture proposed by Abdulrhman et al. (2019).
-    input_layer = tf.keras.layers.Input(shape=(hpopt.time_steps, hpopt.number_attributes),
+    input_layer = tf.keras.layers.Input(shape=(hpo.time_steps, hpo.number_attributes),
                                         name='input_layer')
 
     # Hidden layer one
-    layer = tf.keras.layers.Conv1D(filters=trial.suggest_categorical('filters_1', args.hpopt_filters),
-                                   kernel_size=trial.suggest_categorical('kernel_size_1', args.hpopt_kernels_size),
-                                   padding=trial.suggest_categorical('padding_1', args.hpopt_padding),
-                                   activation=trial.suggest_categorical('activation_1', args.hpopt_activation),
+    layer = tf.keras.layers.Conv1D(filters=trial.suggest_categorical('filters_1', args.hpo_filters),
+                                   kernel_size=trial.suggest_categorical('kernel_size_1', args.hpo_kernels_size),
+                                   padding=trial.suggest_categorical('padding_1', args.hpo_padding),
+                                   activation=trial.suggest_categorical('activation_1', args.hpo_activation),
                                    kernel_initializer=trial.suggest_categorical('kernel_initializer_1',
-                                                                                args.hpopt_kernel_initializer),
+                                                                                args.hpo_kernel_initializer),
                                    )(input_layer)
 
     # Hidden layer two
     layer = tf.keras.layers.MaxPool1D()(layer)
-    layer = tf.keras.layers.Conv1D(filters=trial.suggest_categorical('filters_2', args.hpopt_filters),
-                                   kernel_size=trial.suggest_categorical('kernel_size_2', args.hpopt_kernels_size),
-                                   padding=trial.suggest_categorical('padding_2', args.hpopt_padding),
-                                   activation=trial.suggest_categorical('activation_2', args.hpopt_activation),
+    layer = tf.keras.layers.Conv1D(filters=trial.suggest_categorical('filters_2', args.hpo_filters),
+                                   kernel_size=trial.suggest_categorical('kernel_size_2', args.hpo_kernels_size),
+                                   padding=trial.suggest_categorical('padding_2', args.hpo_padding),
+                                   activation=trial.suggest_categorical('activation_2', args.hpo_activation),
                                    kernel_initializer=trial.suggest_categorical('kernel_initializer_2',
-                                                                                args.hpopt_kernel_initializer),
+                                                                                args.hpo_kernel_initializer),
                                    )(layer)
 
-    if trial.suggest_categorical('conv_layers', args.hpopt_conv_layers) == 2:  # Two conv layers
+    if trial.suggest_categorical('conv_layers', args.hpo_conv_layers) == 2:  # Two conv layers
         pass
-    elif trial.suggest_categorical('conv_layers', args.hpopt_conv_layers) == 3:  # Three conv layers
+    elif trial.suggest_categorical('conv_layers', args.hpo_conv_layers) == 3:  # Three conv layers
 
         # Hidden layer three
         layer = tf.keras.layers.MaxPool1D()(layer)
-        layer = tf.keras.layers.Conv1D(filters=trial.suggest_categorical('filters_3', args.hpopt_filters),
-                                       kernel_size=trial.suggest_categorical('kernel_size_3', args.hpopt_kernels_size),
-                                       padding=trial.suggest_categorical('padding_3', args.hpopt_padding),
-                                       activation=trial.suggest_categorical('activation_3', args.hpopt_activation),
+        layer = tf.keras.layers.Conv1D(filters=trial.suggest_categorical('filters_3', args.hpo_filters),
+                                       kernel_size=trial.suggest_categorical('kernel_size_3', args.hpo_kernels_size),
+                                       padding=trial.suggest_categorical('padding_3', args.hpo_padding),
+                                       activation=trial.suggest_categorical('activation_3', args.hpo_activation),
                                        kernel_initializer=trial.suggest_categorical('kernel_initializer_3',
-                                                                                    args.hpopt_kernel_initializer),
+                                                                                    args.hpo_kernel_initializer),
                                        )(layer)
 
-    elif trial.suggest_categorical('conv_layers', args.hpopt_conv_layers) == 4:  # Four conv layers
+    elif trial.suggest_categorical('conv_layers', args.hpo_conv_layers) == 4:  # Four conv layers
 
         # Hidden layer three
         layer = tf.keras.layers.MaxPool1D()(layer)
-        layer = tf.keras.layers.Conv1D(filters=trial.suggest_categorical('filters_3', args.hpopt_filters),
-                                       kernel_size=trial.suggest_categorical('kernel_size_3', args.hpopt_kernels_size),
-                                       padding=trial.suggest_categorical('padding_3', args.hpopt_padding),
-                                       activation=trial.suggest_categorical('activation_3', args.hpopt_activation),
+        layer = tf.keras.layers.Conv1D(filters=trial.suggest_categorical('filters_3', args.hpo_filters),
+                                       kernel_size=trial.suggest_categorical('kernel_size_3', args.hpo_kernels_size),
+                                       padding=trial.suggest_categorical('padding_3', args.hpo_padding),
+                                       activation=trial.suggest_categorical('activation_3', args.hpo_activation),
                                        kernel_initializer=trial.suggest_categorical('kernel_initializer_3',
-                                                                                    args.hpopt_kernel_initializer),
+                                                                                    args.hpo_kernel_initializer),
                                        )(layer)
 
         # Hidden layer four
         layer = tf.keras.layers.MaxPool1D()(layer)
-        layer = tf.keras.layers.Conv1D(filters=trial.suggest_categorical('filters_4', args.hpopt_filters),
-                                       kernel_size=trial.suggest_categorical('kernel_size_4', args.hpopt_kernels_size),
-                                       padding=trial.suggest_categorical('padding_4', args.hpopt_padding),
-                                       activation=trial.suggest_categorical('activation_4', args.hpopt_activation),
+        layer = tf.keras.layers.Conv1D(filters=trial.suggest_categorical('filters_4', args.hpo_filters),
+                                       kernel_size=trial.suggest_categorical('kernel_size_4', args.hpo_kernels_size),
+                                       padding=trial.suggest_categorical('padding_4', args.hpo_padding),
+                                       activation=trial.suggest_categorical('activation_4', args.hpo_activation),
                                        kernel_initializer=trial.suggest_categorical('kernel_initializer_4',
-                                                                                    args.hpopt_kernel_initializer),
+                                                                                    args.hpo_kernel_initializer),
                                        )(layer)
 
-    elif trial.suggest_categorical('conv_layers', args.hpopt_conv_layers) == 5:  # Five conv layers
+    elif trial.suggest_categorical('conv_layers', args.hpo_conv_layers) == 5:  # Five conv layers
 
         # Hidden layer three
         layer = tf.keras.layers.MaxPool1D()(layer)
-        layer = tf.keras.layers.Conv1D(filters=trial.suggest_categorical('filters_3', args.hpopt_filters),
-                                       kernel_size=trial.suggest_categorical('kernel_size_3', args.hpopt_kernels_size),
-                                       padding=trial.suggest_categorical('padding_3', args.hpopt_padding),
-                                       activation=trial.suggest_categorical('activation_3', args.hpopt_activation),
+        layer = tf.keras.layers.Conv1D(filters=trial.suggest_categorical('filters_3', args.hpo_filters),
+                                       kernel_size=trial.suggest_categorical('kernel_size_3', args.hpo_kernels_size),
+                                       padding=trial.suggest_categorical('padding_3', args.hpo_padding),
+                                       activation=trial.suggest_categorical('activation_3', args.hpo_activation),
                                        kernel_initializer=trial.suggest_categorical('kernel_initializer_3',
-                                                                                    args.hpopt_kernel_initializer),
+                                                                                    args.hpo_kernel_initializer),
                                        )(layer)
 
         # Hidden layer four
         layer = tf.keras.layers.MaxPool1D()(layer)
-        layer = tf.keras.layers.Conv1D(filters=trial.suggest_categorical('filters_4', args.hpopt_filters),
-                                       kernel_size=trial.suggest_categorical('kernel_size_4', args.hpopt_kernels_size),
-                                       padding=trial.suggest_categorical('padding_4', args.hpopt_padding),
-                                       activation=trial.suggest_categorical('activation_4', args.hpopt_activation),
+        layer = tf.keras.layers.Conv1D(filters=trial.suggest_categorical('filters_4', args.hpo_filters),
+                                       kernel_size=trial.suggest_categorical('kernel_size_4', args.hpo_kernels_size),
+                                       padding=trial.suggest_categorical('padding_4', args.hpo_padding),
+                                       activation=trial.suggest_categorical('activation_4', args.hpo_activation),
                                        kernel_initializer=trial.suggest_categorical('kernel_initializer_4',
-                                                                                    args.hpopt_kernel_initializer),
+                                                                                    args.hpo_kernel_initializer),
                                        )(layer)
 
         # Hidden layer five
         layer = tf.keras.layers.MaxPool1D()(layer)
-        layer = tf.keras.layers.Conv1D(filters=trial.suggest_categorical('filters_5', args.hpopt_filters),
-                                       kernel_size=trial.suggest_categorical('kernel_size_5', args.hpopt_kernels_size),
-                                       padding=trial.suggest_categorical('padding_5', args.hpopt_padding),
-                                       activation=trial.suggest_categorical('activation_5', args.hpopt_activation),
+        layer = tf.keras.layers.Conv1D(filters=trial.suggest_categorical('filters_5', args.hpo_filters),
+                                       kernel_size=trial.suggest_categorical('kernel_size_5', args.hpo_kernels_size),
+                                       padding=trial.suggest_categorical('padding_5', args.hpo_padding),
+                                       activation=trial.suggest_categorical('activation_5', args.hpo_activation),
                                        kernel_initializer=trial.suggest_categorical('kernel_initializer_5',
-                                                                                    args.hpopt_kernel_initializer),
+                                                                                    args.hpo_kernel_initializer),
                                        )(layer)
 
     # Hidden layer six
@@ -323,22 +323,22 @@ def find_best_model(trial):
     layer = tf.keras.layers.Flatten()(layer)
 
     # Hidden layer seven
-    b1 = tf.keras.layers.Dense(trial.suggest_categorical('units_dense', args.hpopt_units),
+    b1 = tf.keras.layers.Dense(trial.suggest_categorical('units_dense', args.hpo_units),
                                kernel_initializer=trial.suggest_categorical('kernel_initializer_dense',
-                                                                            args.hpopt_kernel_initializer),
-                               activation=trial.suggest_categorical('activation_dense', args.hpopt_activation)
+                                                                            args.hpo_kernel_initializer),
+                               activation=trial.suggest_categorical('activation_dense', args.hpo_activation)
                                )(layer)
 
     output = tf.keras.layers.Dense(y_train.shape[1],
                                    activation='softmax',
                                    name='output',
                                    kernel_initializer=trial.suggest_categorical(
-                                       'kernel_initializer_7', args.hpopt_kernel_initializer))(b1)
+                                       'kernel_initializer_7', args.hpo_kernel_initializer))(b1)
 
     model = tf.keras.models.Model(inputs=[input_layer], outputs=[output])
 
     model.compile(loss={'output': 'categorical_crossentropy'},
-                  optimizer=trial.suggest_categorical('optimizer', args.hpopt_optimizer),
+                  optimizer=trial.suggest_categorical('optimizer', args.hpo_optimizer),
                   metrics=['accuracy', metric.f1_score])
     early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=25)
     model_checkpoint = tf.keras.callbacks.ModelCheckpoint(

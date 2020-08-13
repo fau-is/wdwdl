@@ -14,7 +14,7 @@ y_test = ''
 
 def create_data(input_data, output_data, preprocessor, arguments, is_ae=False):
     """
-    Generates input data to train and test/evaluate a model during hyperparameter optimization (hpopt) with hyperas.
+    Generates data to train and test/evaluate a model during hyperparameter optimization (hpo) with Optuna.
     """
 
     global args
@@ -39,25 +39,24 @@ def create_data(input_data, output_data, preprocessor, arguments, is_ae=False):
 
 def train_test_split_for_hyperparameter_optimization(input_data):
     """
-    Executes a split-validation for hyperparameter optimization (hpopt) with hyperas. Retrieves indices of training and
-    test cases of the training set for hpopt.
+    Executes a split-validation and retrieves indices of training and test data for hpo.
     """
 
-    shuffle_split = ShuffleSplit(n_splits=1, test_size=args.split_rate_test_hpopt, random_state=0)
+    shuffle_split = ShuffleSplit(n_splits=1, test_size=args.split_rate_test_hpo, random_state=0)
 
-    hpopt_train_indices = []
-    hpopt_test_indices = []
+    hpo_train_indices = []
+    hpo_test_indices = []
 
     for train_indices, test_indices in shuffle_split.split(input_data):
-        hpopt_train_indices.append(train_indices)
-        hpopt_test_indices.append(test_indices)
+        hpo_train_indices.append(train_indices)
+        hpo_test_indices.append(test_indices)
 
     return train_indices, test_indices
 
 
 def retrieve_train_test_instances_and_output_datas(input_data, output_data, train_indices, test_indices, is_ae):
     """
-    Retrieves training and test process instances and output_datas of the training set for hyperparameter optimization (hpopt).
+    Retrieves training and test instances from indices for hpo.
     """
     global time_steps
     global number_attributes

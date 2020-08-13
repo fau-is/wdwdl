@@ -127,7 +127,7 @@ def add_to_file(args, file_type, input_, is_ae=False):
                    str(input_["precision"][-1]) + ";" +
                    str(input_["recall"][-1]) + ";" +
                    str(input_["auc_roc"][-1]) + ";" +
-                   str(args.hpopt_eval_runs) + ";" +
+                   str(args.hpo_eval_runs) + ";" +
                    str(args.shuffle) + ";" +
                    str(args.remove_noise) + ";" +
                    str(args.remove_noise_factor)
