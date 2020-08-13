@@ -4,32 +4,118 @@ import wdwdl.src.utils.metric as metric
 import wdwdl.src.utils.general as general
 import optuna
 import tensorflow as tf
+import sklearn
 
 
-def train_ae_noise_removing(args, features_data):
-    input_dimension = features_data.shape[1]
+def train_ae_noise_removing(args, features_data, preprocessor):
+
+    if args.hpopt_ae:
+        hpopt.create_data(features_data, features_data, preprocessor, args, is_ae=True)
+
+        if args.seed:
+            sampler = optuna.samplers.TPESampler(seed=args.seed_val)  # Make the sampler behave in a deterministic way.
+        else:
+            sampler = optuna.samplers.TPESampler()
+        study = optuna.create_study(direction='minimize', sampler=sampler)
+        study.optimize(optimize_ae, n_trials=args.hpopt_eval_runs)
+
+        print("Number of finished trials: {}".format(len(study.trials)))
+        print("Best trial:")
+        trial = study.best_trial
+        print("  Value: {}".format(trial.value))
+        print("  Params: ")
+        for key, value in trial.params.items():
+            print("    {}: {}".format(key, value))
+
+        general.add_to_file(args, "hyper_params", trial, is_ae=True)
+        return study.best_trial.number
+    else:
+        input_dimension = features_data.shape[1]
+        encoding_dimension = 128
+
+        input_layer = tf.keras.layers.Input(shape=(input_dimension,))
+        encoder = tf.keras.layers.Dense(int(encoding_dimension), activation='tanh')(input_layer)
+        encoder = tf.keras.layers.Dense(int(encoding_dimension / 2), activation='tanh')(encoder)
+        encoder = tf.keras.layers.Dense(int(encoding_dimension / 4), activation='tanh')(encoder)
+        decoder = tf.keras.layers.Dense(int(encoding_dimension / 2), activation='tanh')(encoder)
+        decoder = tf.keras.layers.Dense(int(encoding_dimension), activation='tanh')(decoder)
+        decoder = tf.keras.layers.Dense(input_dimension, activation='sigmoid')(decoder)
+
+        autoencoder = tf.keras.models.Model(inputs=input_layer, outputs=decoder)
+        autoencoder.summary()
+        autoencoder.compile(optimizer='adam', loss='mse')
+
+        early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=25)
+        model_checkpoint = tf.keras.callbacks.ModelCheckpoint('%sae.h5' % args.checkpoint_dir,
+                                                              monitor='val_loss',
+                                                              verbose=0,
+                                                              save_best_only=True,
+                                                              save_weights_only=False,
+                                                              mode='auto')
+        lr_reducer = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=10, verbose=0,
+                                                          mode='auto',
+                                                          min_delta=0.0001, cooldown=0, min_lr=0)
+
+        autoencoder.fit(features_data, features_data,
+                        epochs=args.dnn_num_epochs_auto_encoder,
+                        batch_size=args.batch_size_train,
+                        shuffle=args.shuffle,  # shuffle instances per epoch
+                        validation_split=0.1,
+                        callbacks=[early_stopping, model_checkpoint, lr_reducer]
+                        )
+        return -1
+
+def optimize_ae(trial):
+
+    args = hpopt.args
+    x_train = hpopt.x_train
+    y_train = hpopt.y_train     # identical to x_train
+    x_test = hpopt.x_test
+    y_test = hpopt.y_test       # identical to x_test
+
+    input_dimension = x_train.shape[1]
     encoding_dimension = 128
 
     input_layer = tf.keras.layers.Input(shape=(input_dimension,))
-    encoder = tf.keras.layers.Dense(int(encoding_dimension), activation='tanh')(input_layer)
-    encoder = tf.keras.layers.Dense(int(encoding_dimension / 2), activation='tanh')(encoder)
-    encoder = tf.keras.layers.Dense(int(encoding_dimension / 4), activation='tanh')(encoder)
-    decoder = tf.keras.layers.Dense(int(encoding_dimension / 2), activation='tanh')(encoder)
-    decoder = tf.keras.layers.Dense(int(encoding_dimension), activation='tanh')(decoder)
-    decoder = tf.keras.layers.Dense(input_dimension, activation='sigmoid')(decoder)
+    encoder = tf.keras.layers.Dense(int(encoding_dimension),
+                                    activation=trial.suggest_categorical('activation_enc_1', args.hpopt_activation))(input_layer)
+    encoder = tf.keras.layers.Dense(int(encoding_dimension / 2),
+                                    activation=trial.suggest_categorical('activation_enc_2', args.hpopt_activation))(encoder)
+    encoder = tf.keras.layers.Dense(int(encoding_dimension / 4),
+                                    activation=trial.suggest_categorical('activation_enc_3', args.hpopt_activation))(encoder)
+    decoder = tf.keras.layers.Dense(int(encoding_dimension / 2),
+                                    activation=trial.suggest_categorical('activation_dec_1', args.hpopt_activation))(encoder)
+    decoder = tf.keras.layers.Dense(int(encoding_dimension),
+                                    activation=trial.suggest_categorical('activation_dec_2', args.hpopt_activation))(decoder)
+    decoder = tf.keras.layers.Dense(input_dimension,
+                                    activation=trial.suggest_categorical('activation_dec_3', args.hpopt_activation))(decoder)
 
     autoencoder = tf.keras.models.Model(inputs=input_layer, outputs=decoder)
     autoencoder.summary()
-    autoencoder.compile(optimizer='adam', loss='mse')
+    autoencoder.compile(optimizer=trial.suggest_categorical('optimizer', args.hpopt_optimizer), loss='mse')
 
-    autoencoder.fit(features_data, features_data,
+    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=25)
+    model_checkpoint = tf.keras.callbacks.ModelCheckpoint('%sae_trial%s.h5' % (args.checkpoint_dir, trial.number),
+                                                          monitor='val_loss',
+                                                          verbose=0,
+                                                          save_best_only=True,
+                                                          save_weights_only=False,
+                                                          mode='auto')
+    lr_reducer = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=10, verbose=0,
+                                                      mode='auto', min_delta=0.0001, cooldown=0, min_lr=0)
+
+    autoencoder.fit(x_train, y_train,
                     epochs=args.dnn_num_epochs_auto_encoder,
                     batch_size=args.batch_size_train,
                     shuffle=args.shuffle,  # shuffle instances per epoch
                     validation_split=0.1,
+                    callbacks=[early_stopping, model_checkpoint, lr_reducer]
                     )
 
-    return autoencoder
+    x_pred = autoencoder.predict(x_test)
+    mse = sklearn.metrics.mean_squared_error(y_test, x_pred)
+
+    return mse
 
 
 def train_nn_wa_classification(args, data_set, label, preprocessor):
@@ -385,8 +471,7 @@ def train_model(args, data_set, label, preprocessor):
                                                           save_weights_only=False,
                                                           mode='auto')
     lr_reducer = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=10, verbose=0,
-                                                      mode='auto',
-                                                      min_delta=0.0001, cooldown=0, min_lr=0)
+                                                      mode='auto', min_delta=0.0001, cooldown=0, min_lr=0)
     model.summary()
     model.fit(data_set, {'output': label}, validation_split=0.1, verbose=1,
               callbacks=[early_stopping, model_checkpoint, lr_reducer], batch_size=args.batch_size_train,

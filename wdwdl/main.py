@@ -23,7 +23,7 @@ if __name__ == '__main__':
     preprocessor = Preprocessor(args)
 
     # Filter out noise and get no outliers
-    no_outliers = preprocessor.clean_event_log(args)
+    no_outliers = preprocessor.clean_event_log(args, preprocessor)
 
     # Integrate workarounds
     data_set, label = preprocessor.add_workarounds_to_event_log(args, no_outliers)

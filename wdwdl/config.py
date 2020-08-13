@@ -28,7 +28,8 @@ def load():
     parser.add_argument('--shuffle', default=False, type=int)
     parser.add_argument('--remove_noise', default=False, type=int)
     parser.add_argument('--remove_noise_factor', default=0.1, type=float)
-    parser.add_argument('--hpopt', default=True, type=general.str2bool)  # Hyper-parameter optimization
+    parser.add_argument('--hpopt', default=True, type=general.str2bool)  # Hyper-parameter optimization dnn
+    parser.add_argument('--hpopt_ae', default=True, type=general.str2bool)  # Hyper-parameter optimization autoencoder
     parser.add_argument('--hpopt_eval_runs', default=10, type=int)
     parser.add_argument('--split_rate_test_hpopt', default=0.1, type=float)  # size of validation set in hpo
     parser.add_argument('--hpopt_optimizer', default=['adam', 'nadam', general.ams_grad()], type=list)  # hyper-parameters

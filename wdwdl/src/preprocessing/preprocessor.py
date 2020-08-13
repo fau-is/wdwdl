@@ -10,7 +10,6 @@ import pickle
 import wdwdl.src.workarounds.workarounds as wa
 import wdwdl.src.preprocessing.utils as utils
 import wdwdl.src.trainer as trainer
-import plotly
 
 
 class Preprocessor(object):
@@ -551,7 +550,7 @@ class Preprocessor(object):
 
         return data_set
 
-    def clean_event_log(self, args):
+    def clean_event_log(self, args, preprocessor):
         """
         clean the event log with an Autoencoder.
         :param args:
@@ -562,7 +561,8 @@ class Preprocessor(object):
         features_data = self.get_2d_data_tensor()
 
         general.llprint("Learn autoencoder model ... \n")
-        autoencoder = trainer.train_ae_noise_removing(args, features_data)
+        best_ae_id = trainer.train_ae_noise_removing(args, features_data, preprocessor)
+        autoencoder = self.load_autoencoder(args, best_ae_id)
 
         # Remove noise of event log data
         predictions = autoencoder.predict(features_data)
@@ -583,6 +583,21 @@ class Preprocessor(object):
             plot.reconstruction_error(args, df_error, 'reconstruction_error', threshold)
 
         return no_outliers
+
+    def load_autoencoder(self, args, best_ae_id):
+        """
+        Loads the previously build encoder model.
+        :param args:
+        :param best_ae_id:
+        :return:
+        """
+
+        if best_ae_id == -1:
+            autoencoder = tf.keras.models.load_model('%sae.h5' % args.checkpoint_dir)
+        else:
+            autoencoder = tf.keras.models.load_model('%sae_trial%s.h5' % (args.checkpoint_dir, best_ae_id))
+
+        return autoencoder
 
     def add_workarounds_to_event_log(self, args, no_outliers):
         """

@@ -1,5 +1,4 @@
 from matplotlib import pyplot as plt
-import plotly
 import sklearn
 import numpy as np
 import pandas

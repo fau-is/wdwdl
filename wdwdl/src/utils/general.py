@@ -89,18 +89,36 @@ def clear_files(args):
 
 
 def clear_file(args, file_type):
-    if Path(args.result_dir + file_type + "_" + args.data_set).is_file():
+    file_path_ae = '%s%s_ae_%s' % (args.result_dir, file_type, args.data_set[:-4])
+    file_path_dnn = '%s%s_%s' % (args.result_dir, file_type, args.data_set[:-4])
+
+    # autoencoder
+    if Path(file_path_ae).is_file():
+        pass
+    else:
+        if file_type == 'hyper_params':
+            open(file_path_ae + '.csv', "w+").close()
+    # dnn
+    if Path(file_path_dnn).is_file():
         pass
         # open('%s%s_%s.csv' % (args.result_dir, file_type, args.data_set[:-4]), "w").close()
     else:
-        file = open('%s%s_%s.csv' % (args.result_dir, file_type, args.data_set[:-4]), "w+")
+        file = open(file_path_dnn + '.csv', "w+")
         if file_type == "metrics":
-            file.write("Dataset; accuracy; f1_score; precision; recall; auc_roc; runs; shuffle; remove_noise; remove_noise_factor")
+            file.write(
+                "Dataset; accuracy; f1_score; precision; recall; auc_roc; runs; shuffle; remove_noise; remove_noise_factor")
         file.close()
 
 
-def add_to_file(args, file_type, input_):
-    file = open('%s%s_%s.csv' % (args.result_dir, file_type, args.data_set[:-4]), "a+")
+
+def add_to_file(args, file_type, input_, is_ae=False):
+    if is_ae:
+        file_name = '%s%s_ae_%s.csv' % (args.result_dir, file_type, args.data_set[:-4])
+    else:
+        file_name = '%s%s_%s.csv' % (args.result_dir, file_type, args.data_set[:-4])
+
+    file = open(file_name, "a+")
+
     if file_type == "metrics":
 
         file.write("\n" + args.data_set[:-4] + ";" +
@@ -114,10 +132,9 @@ def add_to_file(args, file_type, input_):
                    str(args.remove_noise) + ";" +
                    str(args.remove_noise_factor)
                    )
-
     elif file_type == "hyper_params":
 
-        if os.stat('%s%s_%s.csv' % (args.result_dir, file_type, args.data_set[:-4])).st_size != 0:
+        if os.stat(file_name).st_size != 0:
             file.write("\n")
 
         file.write("Dataset: " + str(args.data_set[:-4]) + "\n")
@@ -125,11 +142,11 @@ def add_to_file(args, file_type, input_):
         file.write("Best params:\n")
 
         for key, value in input_.params.items():
-            file.write("%s: %s\n" % (str(key), str(value)))
+                file.write("%s: %s\n" % (str(key), str(value)))
 
     elif file_type == "predictions":
 
-        if os.stat('%s%s_%s.csv' % (args.result_dir, file_type, args.data_set[:-4])).st_size != 0:
+        if os.stat(file_name).st_size != 0:
             file.write("\n")
 
         file.write("Dataset: " + str(args.data_set[:-4]) + "\n")
