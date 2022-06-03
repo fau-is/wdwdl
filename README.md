@@ -46,7 +46,12 @@ If you use this code, please cite the paper as follows.
     title={Detecting Temporal Workarounds in Business Processes - A Deep-Learning-based Method for Analysing Event Log Data},
     author={Sven Weinzierl and Verena Wolf and Tobias Pauli and Daniel Beverungen and Martin Matzner},
     journal={Journal of Business Analytics},
-    year={2021}
+    volume = {5},
+    number = {1},
+    pages = {76-100},    
+    year={2022},
+    publisher={Taylor & Francis},
+    doi = {10.1080/2573234X.2021.1978337}
 }
 ```
 
